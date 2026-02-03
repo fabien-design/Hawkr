@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hawklap/components/app_bar/custom_app_bar.dart';
+import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
@@ -44,12 +46,28 @@ class _ExploreViewState extends State<ExploreView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = isDark ? AppColors.dark : AppColors.light;
+
+    return Scaffold(
+      backgroundColor: colors.backgroundApp,
+      appBar: const CustomAppBar(title: 'Explore'),
+      body: _buildBody(colors),
+    );
+  }
+
+  Widget _buildBody(AppColorScheme colors) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (_errorMessage != null) {
-      return Center(child: Text(_errorMessage!));
+      return Center(
+        child: Text(
+          _errorMessage!,
+          style: TextStyle(color: colors.textPrimary),
+        ),
+      );
     }
 
     final LatLng initialCenter =

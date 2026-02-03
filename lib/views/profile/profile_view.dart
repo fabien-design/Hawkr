@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 
-class FavouritesView extends StatelessWidget {
-  const FavouritesView({super.key});
+class ProfileView extends StatelessWidget {
+  const ProfileView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,10 +12,10 @@ class FavouritesView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: const CustomAppBar(title: 'Favourites'),
+      appBar: const CustomAppBar(title: 'Profile'),
       body: Center(
         child: Text(
-          'Favourites',
+          'Profile',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
