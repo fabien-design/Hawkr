@@ -56,7 +56,7 @@ class _ExploreViewState extends State<ExploreView> {
     );
   }
 
-  Widget _buildBody(AppColorsData colors) {
+  Widget _buildBody(AppColorScheme colors) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }

@@ -78,7 +78,7 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
               ),
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
-                value: viewModel.selectedStallId,
+                initialValue: viewModel.selectedStallId,
                 decoration: const InputDecoration(
                   labelText: 'Select Stall',
                 ),
