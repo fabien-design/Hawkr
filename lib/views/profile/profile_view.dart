@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 
 class ProfileView extends StatelessWidget {
@@ -11,17 +12,7 @@ class ProfileView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: AppBar(
-        title: Text(
-          'Profile',
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: colors.backgroundSurface,
-        elevation: 0,
-      ),
+      appBar: const CustomAppBar(title: 'Profile'),
       body: Center(
         child: Text(
           'Profile',

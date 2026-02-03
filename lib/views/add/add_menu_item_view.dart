@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/viewmodels/add_menu_item_viewmodel.dart';
 
@@ -51,10 +52,9 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: AppBar(
-        title: const Text('Add Menu Item'),
-        backgroundColor: colors.backgroundSurface,
-        elevation: 0,
+      appBar: const CustomAppBar(
+        title: 'Add Menu Item',
+        showBackButton: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
