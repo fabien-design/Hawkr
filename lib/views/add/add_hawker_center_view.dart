@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/viewmodels/add_hawker_center_viewmodel.dart';
 
@@ -52,10 +53,9 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: AppBar(
-        title: const Text('Add Hawker Center'),
-        backgroundColor: colors.backgroundSurface,
-        elevation: 0,
+      appBar: const CustomAppBar(
+        title: 'Add Hawker Center',
+        showBackButton: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

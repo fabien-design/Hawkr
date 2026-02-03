@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'add_hawker_center_view.dart';
 import 'add_street_food_view.dart';
@@ -14,22 +15,8 @@ class AddView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: AppBar(
-        title: Text(
-          'Add',
-          style: TextStyle(
-            color: AppColors.brandPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        shape: Border(
-          bottom: BorderSide(
-            color: colors.borderDefault,
-            width: 1,
-          )
-        ),
-        backgroundColor: colors.backgroundSurface,
-        elevation: 0,
+      appBar: const CustomAppBar(
+        title: 'Add',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

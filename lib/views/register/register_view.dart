@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/auth/auth_service.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 
@@ -56,9 +57,9 @@ class _RegisterViewState extends State<RegisterView> {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: AppBar(
-        title: const Text('Sign Up'),
-        backgroundColor: colors.backgroundSurface,
+      appBar: const CustomAppBar(
+        title: 'Sign Up',
+        showBackButton: true,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
