@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:hawklap/core/auth/auth_service.dart';
+import 'package:hawklap/core/theme/app_colors.dart';
+import 'package:hawklap/views/login/login_view.dart';
 import '../../views/explore/explore.dart';
 import '../../views/search/search.dart';
 import '../../views/favourites/favourites.dart';
-import '../../views/add/add.dart';
-import '../../views/profile/profile.dart';
+import '../../views/add/add_view.dart';
+import '../../views/profile/profile_view.dart';
 
 class MainNavbar extends StatefulWidget {
   const MainNavbar({super.key});
@@ -14,6 +17,7 @@ class MainNavbar extends StatefulWidget {
 
 class _MainNavbarState extends State<MainNavbar> {
   int _currentIndex = 0;
+  final authService = AuthService();
 
   final List<Widget> _views = const [
     ExploreView(),
@@ -23,16 +27,43 @@ class _MainNavbarState extends State<MainNavbar> {
     ProfileView(),
   ];
 
+  // require authentication: Favourites (2), Add (3), Profile (4)
+  final Set<int> _protectedIndices = const {2, 3, 4};
+
+  void _onTabTapped(int index) async {
+    if (_protectedIndices.contains(index) && !authService.isLoggedIn()) {
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const LoginView(),
+        ),
+      );
+
+      if (result == true && mounted) {
+        setState(() {
+          _currentIndex = index;
+        });
+      }
+    } else {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = isDark ? AppColors.dark : AppColors.light;
+
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _views),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.backgroundCard,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: colors.textPrimary.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -40,15 +71,11 @@ class _MainNavbarState extends State<MainNavbar> {
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
+          onTap: _onTabTapped,
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: Colors.orange,
-          unselectedItemColor: Colors.grey,
+          backgroundColor: colors.backgroundCard,
+          selectedItemColor: AppColors.brandPrimary,
+          unselectedItemColor: colors.textSecondary,
           elevation: 0,
           items: const [
             BottomNavigationBarItem(

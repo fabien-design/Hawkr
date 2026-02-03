@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 
-class ExploreView extends StatelessWidget {
-  const ExploreView({super.key});
+class ProfileView extends StatelessWidget {
+  const ProfileView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,7 @@ class ExploreView extends StatelessWidget {
       backgroundColor: colors.backgroundApp,
       appBar: AppBar(
         title: Text(
-          'Explore',
+          'Profile',
           style: TextStyle(
             color: colors.textPrimary,
             fontWeight: FontWeight.w600,
@@ -24,7 +24,7 @@ class ExploreView extends StatelessWidget {
       ),
       body: Center(
         child: Text(
-          'Explore',
+          'Profile',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
