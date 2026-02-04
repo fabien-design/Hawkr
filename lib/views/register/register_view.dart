@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/auth/auth_service.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
+import 'package:hawklap/core/utils/error_handler.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -30,8 +31,8 @@ class _RegisterViewState extends State<RegisterView> {
 
     try {
       await authService.signUp(
-        email: email,
-        password: password,
+        email: email.trim(),
+        password: password.trim(),
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -43,8 +44,16 @@ class _RegisterViewState extends State<RegisterView> {
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = ErrorHandler.getErrorMessage(
+          e,
+          fallbackMessage: "An error occurred during registration",
+        );
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     }

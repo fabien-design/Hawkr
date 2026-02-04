@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/auth/auth_service.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
+import 'package:hawklap/core/utils/error_handler.dart';
 import '../register/register_view.dart';
 
 class LoginView extends StatefulWidget {
@@ -22,16 +23,24 @@ class _LoginViewState extends State<LoginView> {
 
     try {
       await authService.signInWithPassword(
-        email: email,
-        password: password,
+        email: email.trim(),
+        password: password.trim(),
       );
       if (mounted) {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = ErrorHandler.getErrorMessage(
+          e,
+          fallbackMessage: "An error occurred during login",
+        );
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     }
