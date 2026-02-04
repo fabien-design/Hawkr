@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hawklap/models/hawker_center.dart';
 import 'package:hawklap/models/street_food.dart';
 import 'package:hawklap/services/hawker_center_service.dart';
@@ -11,23 +12,33 @@ class AddStreetFoodViewModel extends ChangeNotifier {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
 
-  // Coordonnées par défaut (0.0) - sera remplacé par sélection map Leaflet
+  // Stall location (selected via map)
   double _latitude = 0.0;
   double _longitude = 0.0;
 
+  // User's current location
+  Position? _userPosition;
+  bool _isLoadingUserLocation = false;
+
+  // Selected hawker center
   String? _selectedHawkerCenterId;
+  HawkerCenter? _selectedHawkerCenter;
   List<HawkerCenter> _hawkerCenters = [];
+
   bool _isLoading = false;
   String? _errorMessage;
 
   String? get selectedHawkerCenterId => _selectedHawkerCenterId;
+  HawkerCenter? get selectedHawkerCenter => _selectedHawkerCenter;
   List<HawkerCenter> get hawkerCenters => _hawkerCenters;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   double get latitude => _latitude;
   double get longitude => _longitude;
+  Position? get userPosition => _userPosition;
+  bool get isLoadingUserLocation => _isLoadingUserLocation;
 
-  // TODO: Sera appelé par la map Leaflet
+  /// Update stall location when map is moved
   void setLocation(double lat, double lng) {
     _latitude = lat;
     _longitude = lng;
@@ -36,6 +47,19 @@ class AddStreetFoodViewModel extends ChangeNotifier {
 
   void setSelectedHawkerCenter(String? id) {
     _selectedHawkerCenterId = id;
+
+    // Find the selected hawker center and set initial coordinates
+    if (id != null) {
+      _selectedHawkerCenter = _hawkerCenters.firstWhere(
+        (center) => center.id == id,
+        orElse: () => _hawkerCenters.first,
+      );
+      // Initialize stall location to hawker center location
+      _latitude = _selectedHawkerCenter!.latitude;
+      _longitude = _selectedHawkerCenter!.longitude;
+    } else {
+      _selectedHawkerCenter = null;
+    }
     notifyListeners();
   }
 
@@ -45,11 +69,50 @@ class AddStreetFoodViewModel extends ChangeNotifier {
 
     try {
       _hawkerCenters = await _hawkerCenterService.getAll();
+      // Also load user location
+      _loadUserLocation();
     } catch (e) {
       _errorMessage = e.toString();
     }
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> _loadUserLocation() async {
+    _isLoadingUserLocation = true;
+    notifyListeners();
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _isLoadingUserLocation = false;
+        notifyListeners();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _isLoadingUserLocation = false;
+          notifyListeners();
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _isLoadingUserLocation = false;
+        notifyListeners();
+        return;
+      }
+
+      _userPosition = await Geolocator.getCurrentPosition();
+    } catch (e) {
+      // Silently fail - user location is optional
+    }
+
+    _isLoadingUserLocation = false;
     notifyListeners();
   }
 

@@ -23,8 +23,7 @@ class HawkerCenterService {
         .eq('id', id)
         .maybeSingle();
 
-    if (response == null) return null;
-    return HawkerCenter.fromJson(response);
+    return response != null ? HawkerCenter.fromJson(response) : null;
   }
 
   Future<HawkerCenter> create(HawkerCenter hawkerCenter) async {
