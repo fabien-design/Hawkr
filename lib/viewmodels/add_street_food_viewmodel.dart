@@ -132,7 +132,6 @@ class AddStreetFoodViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-
   String? validateHawkerCenter(String? value) {
     if (value == null) {
       return 'Please select a hawker center';
@@ -170,9 +169,10 @@ class AddStreetFoodViewModel extends ChangeNotifier {
         name: nameController.text,
         longitude: _longitude,
         latitude: _latitude,
-        description: descriptionController.text.isEmpty
-            ? null
-            : descriptionController.text,
+        description:
+            descriptionController.text.isEmpty
+                ? null
+                : descriptionController.text,
         imageUrl: imageUrl,
         hawkerCenterId: _selectedHawkerCenterId!,
       );

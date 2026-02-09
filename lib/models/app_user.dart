@@ -20,9 +20,10 @@ class AppUser {
       id: id,
       email: email,
       displayName: profile?['display_name'] as String?,
-      createdAt: profile?['created_at'] != null
-          ? DateTime.parse(profile!['created_at'] as String)
-          : null,
+      createdAt:
+          profile?['created_at'] != null
+              ? DateTime.parse(profile!['created_at'] as String)
+              : null,
     );
   }
 
@@ -31,9 +32,10 @@ class AppUser {
       id: json['id'] as String,
       email: (json['email'] as String?) ?? '',
       displayName: json['display_name'] as String?,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : null,
     );
   }
 

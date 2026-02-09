@@ -89,7 +89,7 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
                   const Row(
                     children: [
                       Text('🌿', style: TextStyle(fontSize: 14)),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Text(
                         'vegetarian',
                         style: TextStyle(
@@ -139,11 +139,30 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // fake image
-          Container(
-            decoration: BoxDecoration(color: colors.borderDefault),
-            child: Icon(Icons.restaurant, size: 80, color: colors.textDisabled),
-          ),
+          // Image or placeholder
+          if (widget.imageUrl != null)
+            Image.network(
+              widget.imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder:
+                  (context, error, stackTrace) => Container(
+                    color: colors.borderDefault,
+                    child: Icon(
+                      Icons.restaurant,
+                      size: 80,
+                      color: colors.textDisabled,
+                    ),
+                  ),
+            )
+          else
+            Container(
+              decoration: BoxDecoration(color: colors.borderDefault),
+              child: Icon(
+                Icons.restaurant,
+                size: 80,
+                color: colors.textDisabled,
+              ),
+            ),
 
           // Gradient overlay at top for status bar readability
           Positioned(

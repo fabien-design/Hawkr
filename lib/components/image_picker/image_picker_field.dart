@@ -20,29 +20,30 @@ class ImagePickerField extends StatelessWidget {
   void _showSourceSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from gallery'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _pick(ImageSource.gallery);
-              },
+      builder:
+          (ctx) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Choose from gallery'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pick(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Take a photo'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pick(ImageSource.camera);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take a photo'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _pick(ImageSource.camera);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -77,10 +78,7 @@ class ImagePickerField extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             height: 200,
-            child: Image.file(
-              imageFile!,
-              fit: BoxFit.cover,
-            ),
+            child: Image.file(imageFile!, fit: BoxFit.cover),
           ),
           Positioned(
             top: 8,
@@ -94,11 +92,7 @@ class ImagePickerField extends StatelessWidget {
                   color: Colors.black54,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 18,
-                ),
+                child: const Icon(Icons.close, color: Colors.white, size: 18),
               ),
             ),
           ),
@@ -147,10 +141,11 @@ class _DashedBorderPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
+    final paint =
+        Paint()
+          ..color = color
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
 
     const dashWidth = 6.0;
     const dashSpace = 4.0;
@@ -166,10 +161,7 @@ class _DashedBorderPainter extends CustomPainter {
       double distance = 0;
       while (distance < metric.length) {
         final end = (distance + dashWidth).clamp(0, metric.length);
-        canvas.drawPath(
-          metric.extractPath(distance, end.toDouble()),
-          paint,
-        );
+        canvas.drawPath(metric.extractPath(distance, end.toDouble()), paint);
         distance += dashWidth + dashSpace;
       }
     }

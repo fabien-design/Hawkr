@@ -53,10 +53,7 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: const CustomAppBar(
-        title: 'Add Menu Item',
-        showBackButton: true,
-      ),
+      appBar: const CustomAppBar(title: 'Add Menu Item', showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -81,27 +78,24 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
               DropdownButtonFormField<String>(
                 initialValue: viewModel.selectedStallId,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Select Stall',
-                ),
-                items: viewModel.stalls.map((stall) {
-                  return DropdownMenuItem(
-                    value: stall.id,
-                    child: Text(
-                      stall.name,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  );
-                }).toList(),
+                decoration: const InputDecoration(labelText: 'Select Stall'),
+                items:
+                    viewModel.stalls.map((stall) {
+                      return DropdownMenuItem(
+                        value: stall.id,
+                        child: Text(
+                          stall.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
                 onChanged: viewModel.setSelectedStall,
                 validator: viewModel.validateStall,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: viewModel.nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Dish Name',
-                ),
+                decoration: const InputDecoration(labelText: 'Dish Name'),
                 validator: viewModel.validateName,
               ),
               const SizedBox(height: 16),
@@ -133,17 +127,20 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: viewModel.isLoading ? null : _submit,
-                  child: viewModel.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text(
-                          'Submit',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
+                  child:
+                      viewModel.isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                 ),
               ),
             ],

@@ -52,7 +52,8 @@ class _MainNavbarState extends State<MainNavbar> {
           _navigatorKeys[index] = GlobalKey<NavigatorState>();
         }
         // Redirect to Explore on logout
-        if (!authService.isLoggedIn() && _protectedIndices.contains(_currentIndex)) {
+        if (!authService.isLoggedIn() &&
+            _protectedIndices.contains(_currentIndex)) {
           _currentIndex = 0;
         }
       });
@@ -75,9 +76,7 @@ class _MainNavbarState extends State<MainNavbar> {
     if (_protectedIndices.contains(index) && !authService.isLoggedIn()) {
       final result = await Navigator.push<bool>(
         context,
-        MaterialPageRoute(
-          builder: (context) => const LoginView(),
-        ),
+        MaterialPageRoute(builder: (context) => const LoginView()),
       );
 
       if (result == true && mounted) {
@@ -115,9 +114,7 @@ class _MainNavbarState extends State<MainNavbar> {
               child: Navigator(
                 key: _navigatorKeys[index],
                 onGenerateRoute: (settings) {
-                  return MaterialPageRoute(
-                    builder: (_) => _views[index],
-                  );
+                  return MaterialPageRoute(builder: (_) => _views[index]);
                 },
               ),
             );

@@ -62,9 +62,10 @@ class ProfileViewModel extends ChangeNotifier {
     try {
       final updatedUser = await _userService.updateProfile(
         userId: _user!.id,
-        displayName: displayNameController.text.trim().isEmpty
-            ? null
-            : displayNameController.text.trim(),
+        displayName:
+            displayNameController.text.trim().isEmpty
+                ? null
+                : displayNameController.text.trim(),
       );
 
       debugPrint('Updated user: $updatedUser');

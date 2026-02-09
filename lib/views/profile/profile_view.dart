@@ -12,9 +12,7 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) =>
-      ProfileViewModel()
-        ..loadProfile(),
+      create: (_) => ProfileViewModel()..loadProfile(),
       child: const _ProfileContent(),
     );
   }
@@ -39,147 +37,162 @@ class _ProfileContentState extends State<_ProfileContent> {
     return Scaffold(
       backgroundColor: colors.backgroundApp,
       appBar: const CustomAppBar(title: 'Profile'),
-      body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 32),
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        viewModel.user?.initials ?? '?',
-                        style: const TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.brandPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      viewModel.user?.nameOrEmail ?? '',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                    if (viewModel.user?.displayName != null)
-                      Text(
-                        viewModel.user!.email,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: colors.textSecondary,
-                        )
-                      ),
-                    const SizedBox(height: 24),
-
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MenuItemDetails()),
-                        );
-                      },
-                      child: Text('Go to Second Screen'),
-                    ),
-                    
-                    // Edit profile section
-                    if (viewModel.isEditing) ...[
-                      Form(
-                        key: _formKey,
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: TextFormField(
-                            controller: viewModel.displayNameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Display Name',
-                            ),
-                            validator: viewModel.validateDisplayName,
+      body:
+          viewModel.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 32),
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          viewModel.user?.initials ?? '?',
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.brandPrimary,
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: viewModel.toggleEditMode,
-                              child: const Text('Cancel'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: viewModel.isSaving
-                                  ? null
-                                  : () async {
-                                      if (!_formKey.currentState!.validate()) return;
-                                      try {
-                                        final success = await viewModel.saveProfile();
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              success
-                                                  ? 'Profile saved successfully'
-                                                  : 'Failed to save profile',
-                                            ),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('An error occurred while saving the profile'),
-                                          ),
-                                        );
-                                      }
-                                    },
-                              child: viewModel.isSaving
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text('Save'),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        viewModel.user?.nameOrEmail ?? '',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
+                        ),
                       ),
-                    ] else ...[
-                      SizedBox(
-                        width: double.infinity,
-                        child: Column(
-                          children: [
-                            _buildActionTile(
-                              icon: Icons.edit,
-                              label: 'Edit Profile',
-                              colors: colors,
-                              onTap: viewModel.toggleEditMode,
+                      if (viewModel.user?.displayName != null)
+                        Text(
+                          viewModel.user!.email,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MenuItemDetails(),
                             ),
-                            _buildThemeTile(context, colors),
-                            _buildActionTile(
-                              icon: Icons.logout,
-                              label: 'Sign Out',
-                              colors: colors,
-                              isDestructive: true,
-                              onTap: () => _showSignOutDialog(
-                                  context, viewModel),
+                          );
+                        },
+                        child: Text('Go to Second Screen'),
+                      ),
+
+                      // Edit profile section
+                      if (viewModel.isEditing) ...[
+                        Form(
+                          key: _formKey,
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: TextFormField(
+                              controller: viewModel.displayNameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Display Name',
+                              ),
+                              validator: viewModel.validateDisplayName,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: viewModel.toggleEditMode,
+                                child: const Text('Cancel'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed:
+                                    viewModel.isSaving
+                                        ? null
+                                        : () async {
+                                          if (!_formKey.currentState!
+                                              .validate())
+                                            return;
+                                          try {
+                                            final success =
+                                                await viewModel.saveProfile();
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  success
+                                                      ? 'Profile saved successfully'
+                                                      : 'Failed to save profile',
+                                                ),
+                                              ),
+                                            );
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'An error occurred while saving the profile',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                child:
+                                    viewModel.isSaving
+                                        ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                        : const Text('Save'),
+                              ),
                             ),
                           ],
                         ),
-                      ),
+                      ] else ...[
+                        SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            children: [
+                              _buildActionTile(
+                                icon: Icons.edit,
+                                label: 'Edit Profile',
+                                colors: colors,
+                                onTap: viewModel.toggleEditMode,
+                              ),
+                              _buildThemeTile(context, colors),
+                              _buildActionTile(
+                                icon: Icons.logout,
+                                label: 'Sign Out',
+                                colors: colors,
+                                isDestructive: true,
+                                onTap:
+                                    () =>
+                                        _showSignOutDialog(context, viewModel),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
-                  ]
+                  ),
                 ),
               ),
-      ),
     );
   }
 
@@ -208,10 +221,7 @@ class _ProfileContentState extends State<_ProfileContent> {
         themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
         color: colors.textPrimary,
       ),
-      title: Text(
-        'Dark Mode',
-        style: TextStyle(color: colors.textPrimary),
-      ),
+      title: Text('Dark Mode', style: TextStyle(color: colors.textPrimary)),
       trailing: Switch(
         value: themeProvider.isDarkMode,
         onChanged: (_) => themeProvider.toggleTheme(),
@@ -225,23 +235,24 @@ class _ProfileContentState extends State<_ProfileContent> {
   void _showSignOutDialog(BuildContext context, ProfileViewModel viewModel) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Sign Out'),
+            content: const Text('Are you sure you want to sign out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  viewModel.signOut();
+                },
+                child: const Text('Sign Out'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              viewModel.signOut();
-            },
-            child: const Text('Sign Out'),
-          ),
-        ],
-      ),
     );
   }
 }

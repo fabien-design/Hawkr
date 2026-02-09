@@ -102,9 +102,10 @@ class AddMenuItemViewModel extends ChangeNotifier {
       final menuItem = MenuItem(
         name: nameController.text,
         price: double.parse(priceController.text),
-        description: descriptionController.text.isEmpty
-            ? null
-            : descriptionController.text,
+        description:
+            descriptionController.text.isEmpty
+                ? null
+                : descriptionController.text,
         stallId: _selectedStallId!,
         imageUrl: imageUrl,
       );

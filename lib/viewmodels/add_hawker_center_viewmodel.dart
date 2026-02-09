@@ -131,9 +131,10 @@ class AddHawkerCenterViewModel extends ChangeNotifier {
         address: addressController.text,
         latitude: _latitude,
         longitude: _longitude,
-        description: descriptionController.text.isEmpty
-            ? null
-            : descriptionController.text,
+        description:
+            descriptionController.text.isEmpty
+                ? null
+                : descriptionController.text,
         imageUrl: imageUrl,
       );
 
