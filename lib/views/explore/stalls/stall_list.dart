@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/explore/map_service.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../register/register_view.dart';
+import '../../details/street_food_details.dart';
 
 class StallListView extends StatefulWidget {
   final HawkerCenter hawkerCenter;
@@ -59,6 +61,9 @@ class _StallListViewState extends State<StallListView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = isDark ? AppColors.dark : AppColors.light;
+
     return Column(
       children: [
         const SizedBox(height: 10),
@@ -66,7 +71,7 @@ class _StallListViewState extends State<StallListView> {
           width: 40,
           height: 5,
           decoration: BoxDecoration(
-            color: Colors.grey[300],
+            color: colors.borderDefault,
             borderRadius: BorderRadius.circular(10),
           ),
         ),
@@ -74,7 +79,11 @@ class _StallListViewState extends State<StallListView> {
           padding: const EdgeInsets.all(20),
           child: Text(
             widget.hawkerCenter.name,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
           ),
         ),
         Expanded(
@@ -84,14 +93,26 @@ class _StallListViewState extends State<StallListView> {
             ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return Center(
+                  child: CircularProgressIndicator(color: colors.borderFocused),
+                );
               }
               if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
+                return Center(
+                  child: Text(
+                    'Error: ${snapshot.error}',
+                    style: TextStyle(color: colors.textPrimary),
+                  ),
+                );
               }
               final streetFoods = snapshot.data ?? [];
               if (streetFoods.isEmpty) {
-                return const Center(child: Text('No street foods found here.'));
+                return Center(
+                  child: Text(
+                    'No street foods found here.',
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                );
               }
               return ListView.builder(
                 controller: widget.scrollController,
@@ -100,7 +121,7 @@ class _StallListViewState extends State<StallListView> {
                 itemBuilder: (context, index) {
                   final food = streetFoods[index];
                   _checkFavoriteStatus(food.id);
-                  return _buildStreetFoodCard(food);
+                  return _buildStreetFoodCard(food, colors);
                 },
               );
             },
@@ -110,118 +131,139 @@ class _StallListViewState extends State<StallListView> {
     );
   }
 
-  Widget _buildStreetFoodCard(StreetFood food) {
+  Widget _buildStreetFoodCard(StreetFood food, AppColorScheme colors) {
     final bool isFav = _favorites[food.id] ?? false;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StreetFoodDetailView(streetFoodId: food.id),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(25),
-                ),
-                child: Container(
-                  height: 150,
-                  width: double.infinity,
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.image, size: 50, color: Colors.white),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 15,
-                right: 15,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF42C18C),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Open',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: colors.backgroundCard,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        food.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        isFav ? Icons.favorite : Icons.favorite_border,
-                        color: isFav ? Colors.red : Colors.grey,
-                        size: 28,
-                      ),
-                      onPressed: () => _toggleFavorite(food.id),
-                    ),
-                  ],
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(25),
+                  ),
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: colors.backgroundGreyInformation,
+                    child:
+                        food.imageUrl != null
+                            ? Image.network(food.imageUrl!, fit: BoxFit.cover)
+                            : Center(
+                              child: Icon(
+                                Icons.image,
+                                size: 50,
+                                color: colors.textDisabled,
+                              ),
+                            ),
+                  ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  food.description ?? 'Local Specialty',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                ),
-                const SizedBox(height: 10),
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.thumb_up_outlined,
-                      color: Color(0xFF42C18C),
-                      size: 18,
+                Positioned(
+                  top: 15,
+                  right: 15,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                    SizedBox(width: 5),
-                    Text(
-                      '+3152',
+                    decoration: BoxDecoration(
+                      color: colors.statusOpen,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Open',
                       style: TextStyle(
-                        color: Color(0xFF42C18C),
+                        color: colors.textInverse,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          food.name,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color:
+                              isFav
+                                  ? colors.actionFavorite
+                                  : colors.textDisabled,
+                          size: 28,
+                        ),
+                        onPressed: () => _toggleFavorite(food.id),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    food.description ?? 'Local Specialty',
+                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.thumb_up_outlined,
+                        color: colors.actionUpvote,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        '+3152',
+                        style: TextStyle(
+                          color: colors.actionUpvote,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

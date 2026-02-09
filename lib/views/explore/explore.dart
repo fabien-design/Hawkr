@@ -4,8 +4,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../core/services/explore/map_service.dart';
+import '../../core/theme/app_colors.dart';
 import 'stalls/stall_list.dart';
+import 'stalls/street_food_detail.dart';
 import 'filter/filters.dart';
+import 'hawker_center_panel.dart';
 
 class ExploreView extends StatefulWidget {
   const ExploreView({super.key});
@@ -97,6 +100,7 @@ class _ExploreViewState extends State<ExploreView> {
   void _openFilterMenu() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return FilterMenu(
           initialRadius: _searchRadius,
@@ -111,6 +115,9 @@ class _ExploreViewState extends State<ExploreView> {
   }
 
   void _showHawkerCenterDetails(HawkerCenter center) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = isDark ? AppColors.dark : AppColors.light;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -122,9 +129,11 @@ class _ExploreViewState extends State<ExploreView> {
           maxChildSize: 0.9,
           builder: (_, controller) {
             return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              decoration: BoxDecoration(
+                color: colors.backgroundSurface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: StallListView(
                 hawkerCenter: center,
@@ -137,16 +146,34 @@ class _ExploreViewState extends State<ExploreView> {
     );
   }
 
+  void _showStreetFoodDetails(String streetFoodId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StreetFoodDetailView(streetFoodId: streetFoodId),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const Color hawkColor = Color(0xFFF26A2E);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = isDark ? AppColors.dark : AppColors.light;
+    const Color hawkColor = AppColors.brandPrimary;
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(color: colors.borderFocused),
+      );
     }
 
     if (_errorMessage != null) {
-      return Center(child: Text(_errorMessage!));
+      return Center(
+        child: Text(
+          _errorMessage!,
+          style: TextStyle(color: colors.textPrimary),
+        ),
+      );
     }
 
     final LatLng initialCenter =
@@ -154,207 +181,258 @@ class _ExploreViewState extends State<ExploreView> {
             ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
             : const LatLng(48.8566, 2.3522);
 
-    return Stack(
-      children: [
-        FlutterMap(
-          mapController: _mapController,
-          options: MapOptions(
-            initialCenter: initialCenter,
-            initialZoom: _currentZoom,
-            onPositionChanged: (position, hasGesture) {
-              if (position.zoom != null && position.zoom != _currentZoom) {
-                setState(() {
-                  _currentZoom = position.zoom!;
-                });
-                if (_currentZoom >= _streetFoodZoomThreshold &&
-                    _visibleStreetFoods.isEmpty) {
-                  _fetchVisibleStreetFoods();
-                } else if (_currentZoom < _streetFoodZoomThreshold &&
-                    _visibleStreetFoods.isNotEmpty) {
+    return Scaffold(
+      backgroundColor: colors.backgroundApp,
+      body: Stack(
+        children: [
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: initialCenter,
+              initialZoom: _currentZoom,
+              onPositionChanged: (position, hasGesture) {
+                if (position.zoom != null && position.zoom != _currentZoom) {
                   setState(() {
-                    _visibleStreetFoods = [];
+                    _currentZoom = position.zoom!;
                   });
+                  if (_currentZoom >= _streetFoodZoomThreshold &&
+                      _visibleStreetFoods.isEmpty) {
+                    _fetchVisibleStreetFoods();
+                  } else if (_currentZoom < _streetFoodZoomThreshold &&
+                      _visibleStreetFoods.isNotEmpty) {
+                    setState(() {
+                      _visibleStreetFoods = [];
+                    });
+                  }
                 }
-              }
-            },
-            interactionOptions: const InteractionOptions(
-              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-            ),
-          ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.hawkr',
-            ),
-            if (_currentPosition != null) ...[
-              CircleLayer(
-                circles: [
-                  CircleMarker(
-                    point: initialCenter,
-                    radius: _searchRadius * 1000, // Convert km to meters
-                    useRadiusInMeter: true,
-                    color: hawkColor.withOpacity(0.15),
-                    borderColor: hawkColor,
-                    borderStrokeWidth: 2,
-                  ),
-                ],
+              },
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: initialCenter,
-                    width: 40,
-                    height: 40,
-                    child: const Icon(
-                      Icons.location_on,
-                      color: Colors.red,
-                      size: 30,
-                    ),
-                  ),
-                  // Hawker Center Markers (Visible when zoom < threshold)
-                  if (_currentZoom < _streetFoodZoomThreshold)
-                    ..._nearbyHawkerCenters.map((center) {
-                      return Marker(
-                        point: LatLng(center.latitude, center.longitude),
-                        width: 50,
-                        height: 50,
-                        child: GestureDetector(
-                          onTap: () => _showHawkerCenterDetails(center),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              const Icon(
-                                Icons.location_on,
-                                color: Colors.blue,
-                                size: 50,
-                              ),
-                              Positioned(
-                                top: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 18,
-                                    minHeight: 18,
-                                  ),
-                                  child: Text(
-                                    '${center.streetFoodCount}',
-                                    style: const TextStyle(
-                                      color: Colors.blue,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  // Street Food Markers (Visible when zoom >= threshold)
-                  if (_currentZoom >= _streetFoodZoomThreshold)
-                    ..._visibleStreetFoods.map((stall) {
-                      return Marker(
-                        point: LatLng(stall.latitude, stall.longitude),
-                        width: 30,
-                        height: 30,
-                        child: const Icon(
-                          Icons.location_on,
-                          color: Colors.green,
-                          size: 30,
-                        ),
-                      );
-                    }).toList(),
-                ],
+            ),
+            children: [
+              TileLayer(
+                urlTemplate:
+                    isDark
+                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.hawkr',
               ),
-            ],
-          ],
-        ),
-        // Header
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: ClipRRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 10,
-                  bottom: 20,
-                  left: 20,
-                  right: 20,
-                ),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2)),
-                child: Row(
-                  children: [
-                    // Search Bar
-                    Expanded(
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: const TextField(
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            isDense: true,
-                            hintText: 'Search...',
-                            hintStyle: TextStyle(color: hawkColor),
-                            prefixIcon: Icon(Icons.search, color: hawkColor),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Filter Button
-                    GestureDetector(
-                      onTap: _openFilterMenu,
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: const Icon(Icons.tune, color: hawkColor),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Recenter Button
-                    GestureDetector(
-                      onTap: _recenter,
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: const Icon(
-                          Icons.track_changes,
-                          color: hawkColor,
-                        ),
-                      ),
+              if (_currentPosition != null) ...[
+                CircleLayer(
+                  circles: [
+                    CircleMarker(
+                      point: initialCenter,
+                      radius: _searchRadius * 1000, // Convert km to meters
+                      useRadiusInMeter: true,
+                      color: hawkColor.withOpacity(0.15),
+                      borderColor: hawkColor,
+                      borderStrokeWidth: 2,
                     ),
                   ],
                 ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: initialCenter,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 30,
+                      ),
+                    ),
+                    // Hawker Center Markers (Visible when zoom < threshold)
+                    if (_currentZoom < _streetFoodZoomThreshold)
+                      ..._nearbyHawkerCenters.map((center) {
+                        return Marker(
+                          point: LatLng(center.latitude, center.longitude),
+                          width: 50,
+                          height: 50,
+                          child: GestureDetector(
+                            onTap: () => _showHawkerCenterDetails(center),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Icon(
+                                  Icons.location_on,
+                                  color: colors.mapHawkerCenterPin,
+                                  size: 50,
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: colors.backgroundCard,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 18,
+                                      minHeight: 18,
+                                    ),
+                                    child: Text(
+                                      '${center.streetFoodCount}',
+                                      style: TextStyle(
+                                        color: colors.mapHawkerCenterPin,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    // Street Food Markers (Visible when zoom >= threshold)
+                    if (_currentZoom >= _streetFoodZoomThreshold)
+                      ..._visibleStreetFoods.map((stall) {
+                        return Marker(
+                          point: LatLng(stall.latitude, stall.longitude),
+                          width: 30,
+                          height: 30,
+                          child: GestureDetector(
+                            onTap: () => _showStreetFoodDetails(stall.id),
+                            child: Icon(
+                              Icons.location_on,
+                              color: colors.mapStreetFoodPin,
+                              size: 30,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          // Header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 10,
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.backgroundApp.withOpacity(0.4),
+                  ),
+                  child: Row(
+                    children: [
+                      // Search Bar
+                      Expanded(
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: colors.backgroundCard,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: TextField(
+                            textAlignVertical: TextAlignVertical.center,
+                            style: TextStyle(color: colors.textPrimary),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              hintText: 'Search...',
+                              hintStyle: TextStyle(color: colors.textSecondary),
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: hawkColor,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Filter Button
+                      GestureDetector(
+                        onTap: _openFilterMenu,
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: colors.backgroundCard,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.tune, color: hawkColor),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Recenter Button
+                      GestureDetector(
+                        onTap: _recenter,
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: colors.backgroundCard,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.track_changes,
+                            color: hawkColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ],
+          // Bottom Sliding Panel
+          DraggableScrollableSheet(
+            initialChildSize: 0.05, // Only show the bar
+            minChildSize: 0.05,
+            maxChildSize: 0.8,
+            snap: true,
+            snapSizes: const [0.05, 0.4, 0.8],
+            builder: (context, scrollController) {
+              return HawkerCenterPanel(
+                hawkerCenters: _nearbyHawkerCenters,
+                scrollController: scrollController,
+                onCenterTap: _showHawkerCenterDetails,
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
