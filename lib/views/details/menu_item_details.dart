@@ -1,19 +1,131 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../components/rating/rating_widget.dart';
+import '../../models/menu_item.dart';
+import '../../models/vote_count.dart';
+import '../../services/vote_service.dart';
 
 class MenuItemDetails extends StatefulWidget {
-  final String? imageUrl;
+  final MenuItem item;
+  final String? stallName;
+  final String stallId;
 
-  const MenuItemDetails({super.key, this.imageUrl});
+  const MenuItemDetails({
+    super.key,
+    required this.item,
+    this.stallName,
+    required this.stallId,
+  });
 
   @override
   State<MenuItemDetails> createState() => _MenuItemDetailsState();
 }
 
 class _MenuItemDetailsState extends State<MenuItemDetails> {
+  final _voteService = VoteService();
+
+  // Single source of truth for vote state
   bool _isLiked = false;
   bool _isDisliked = false;
+  int _upvotes = 0;
+  int _downvotes = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVoteData();
+  }
+
+  /// Fetch fresh vote counts + user's own vote from the database.
+  Future<void> _loadVoteData() async {
+    if (widget.item.id == null) return;
+
+    try {
+      final results = await Future.wait([
+        _voteService.getUserMenuItemVote(widget.item.id!),
+        _voteService.getMenuItemVotes(widget.item.id!),
+      ]);
+
+      if (mounted) {
+        final userVote = results[0] as int?;
+        final counts = results[1] as VoteCount;
+
+        setState(() {
+          _isLiked = userVote == 1;
+          _isDisliked = userVote == -1;
+          _upvotes = counts.upvotes;
+          _downvotes = counts.downvotes;
+        });
+      }
+    } catch (e) {
+      // Silently handle — we still show the UI with defaults
+    }
+  }
+
+  Future<void> _handleVote(VoteAction action) async {
+    if (widget.item.id == null) return;
+
+    // Save previous state for rollback
+    final prevLiked = _isLiked;
+    final prevDisliked = _isDisliked;
+    final prevUpvotes = _upvotes;
+    final prevDownvotes = _downvotes;
+
+    // Apply optimistic update immediately
+    setState(() {
+      switch (action) {
+        case VoteAction.upvote:
+          _upvotes += 1;
+          if (_isDisliked) _downvotes -= 1;
+          _isLiked = true;
+          _isDisliked = false;
+          break;
+        case VoteAction.downvote:
+          _downvotes += 1;
+          if (_isLiked) _upvotes -= 1;
+          _isDisliked = true;
+          _isLiked = false;
+          break;
+        case VoteAction.removeVote:
+          if (_isLiked) _upvotes -= 1;
+          if (_isDisliked) _downvotes -= 1;
+          _isLiked = false;
+          _isDisliked = false;
+          break;
+      }
+    });
+
+    // Fire DB call in background — revert on failure
+    try {
+      switch (action) {
+        case VoteAction.upvote:
+          await _voteService.voteMenuItem(widget.item.id!, 1);
+          break;
+        case VoteAction.downvote:
+          await _voteService.voteMenuItem(widget.item.id!, -1);
+          break;
+        case VoteAction.removeVote:
+          await _voteService.removeMenuItemVote(widget.item.id!);
+          break;
+      }
+    } catch (e) {
+      // Rollback to previous state
+      if (mounted) {
+        setState(() {
+          _isLiked = prevLiked;
+          _isDisliked = prevDisliked;
+          _upvotes = prevUpvotes;
+          _downvotes = prevDownvotes;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not update vote: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,15 +151,11 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
                   Row(
                     children: [
                       CommunityRatingWidget(
-                        percentage: '96%',
-                        initialIsLiked: _isLiked,
-                        initialIsDisliked: _isDisliked,
-                        onRatingChanged: (liked, disliked) {
-                          setState(() {
-                            _isLiked = liked;
-                            _isDisliked = disliked;
-                          });
-                        },
+                        isLiked: _isLiked,
+                        isDisliked: _isDisliked,
+                        upvoteCount: _upvotes,
+                        downvoteCount: _downvotes,
+                        onVote: _handleVote,
                       ),
                       const Spacer(flex: 2),
 
@@ -76,51 +184,90 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
                   ),
                   const SizedBox(height: 20),
 
+                  // Price
+                  Text(
+                    '\$${widget.item.price.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.brandPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
                   // Title
                   Text(
-                    'Chili Crab Noodle',
+                    widget.item.name,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: colors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
 
-                  // Vegetarian tag
-                  const Row(
-                    children: [
-                      Text('🌿', style: TextStyle(fontSize: 14)),
-                      SizedBox(width: 4),
-                      Text(
-                        'vegetarian',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.brandSuccess,
-                          fontWeight: FontWeight.w500,
-                        ),
+                  // Clickable Stall name
+                  if (widget.stallName != null)
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: Navigate to stall details page
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => StallDetails(stallId: widget.stallId),
+                        //   ),
+                        // );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Navigating to ${widget.stallName} (Not implemented yet)'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'From: ${widget.stallName!}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.brandPrimary,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 14,
+                            color: AppColors.brandPrimary,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Category chips
-                  _buildCategoryChips(colors),
+                    ),
                   const SizedBox(height: 18),
 
                   // Description
-                  Text(
-                    'Chili Crab Noodles are a popular Singaporean dish combining tender noodles with fresh crab meat in a rich, sweet, and spicy tomato-chili sauce, often enhanced with garlic and egg for a savory, comforting flavor.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colors.textSecondary,
-                      height: 1.5,
+                  if (widget.item.description != null) ...[
+                    Text(
+                      'Description',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Allergen section
-                  _buildAllergenSection(colors),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.item.description!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ],
               ),
             ),
@@ -142,9 +289,9 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
         fit: StackFit.expand,
         children: [
           // Image or placeholder
-          if (widget.imageUrl != null)
+          if (widget.item.imageUrl != null && widget.item.imageUrl!.isNotEmpty)
             Image.network(
-              widget.imageUrl!,
+              widget.item.imageUrl!,
               fit: BoxFit.cover,
               errorBuilder:
                   (context, error, stackTrace) => Container(
@@ -217,79 +364,6 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCategoryChips(AppColorScheme colors) {
-    final categories = ['Local', 'Noodle', 'Crab'];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children:
-          categories.map((category) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colors.borderDefault),
-              ),
-              child: Text(
-                category,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            );
-          }).toList(),
-    );
-  }
-
-  Widget _buildAllergenSection(AppColorScheme colors) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Allergen',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: colors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            _buildAllergenItem(Icons.water_drop_outlined, 'Mollusc'),
-            const SizedBox(width: 20),
-            _buildAllergenItem(Icons.grass, 'Soyan'),
-            const SizedBox(width: 20),
-            _buildAllergenItem(Icons.egg_outlined, 'Peanuts'),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAllergenItem(IconData icon, String label) {
-    return Column(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: const BoxDecoration(
-            color: Color(0xFFFDE8E0),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 24, color: AppColors.brandPrimary),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF6B6B6B)),
-        ),
-      ],
     );
   }
 }

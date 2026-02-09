@@ -276,13 +276,24 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         CommunityRatingWidget(
-          percentage: '96%',
-          initialIsLiked: _isLiked,
-          initialIsDisliked: _isDisliked,
-          onRatingChanged: (liked, disliked) {
+          isLiked: _isLiked,
+          isDisliked: _isDisliked,
+          onVote: (action) {
             setState(() {
-              _isLiked = liked;
-              _isDisliked = disliked;
+              switch (action) {
+                case VoteAction.upvote:
+                  _isLiked = true;
+                  _isDisliked = false;
+                  break;
+                case VoteAction.downvote:
+                  _isDisliked = true;
+                  _isLiked = false;
+                  break;
+                case VoteAction.removeVote:
+                  _isLiked = false;
+                  _isDisliked = false;
+                  break;
+              }
             });
           },
         ),
