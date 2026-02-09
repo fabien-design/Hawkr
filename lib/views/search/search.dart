@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hawklap/components/app_bar/custom_app_bar.dart';
+import 'package:hawklap/components/cards/hawker_center_card.dart';
+import 'package:hawklap/components/cards/menu_item_card.dart';
+import 'package:hawklap/components/cards/street_food_card.dart';
+import 'package:hawklap/components/search/horizontal_carousel.dart';
+import 'package:hawklap/components/search/search_bar.dart' as custom;
+import 'package:hawklap/components/search/section_header.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/models/hawker_center.dart';
 import 'package:hawklap/models/menu_item.dart';
@@ -215,134 +221,161 @@ class _SearchViewState extends State<SearchView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSearchField(colors),
+          custom.SearchBar(
+            controller: _searchController,
+            colors: colors,
+          ),
           const SizedBox(height: 20),
           if (featured.isNotEmpty) ...[
-            _buildSectionTitle(
+            SectionHeader(
               title: 'Featured (Sponsored)',
               subtitle: 'Boosted by merchants',
               colors: colors,
             ),
-            _buildCarousel<StreetFood>(
+            HorizontalCarousel<StreetFood>(
               height: 240,
               items: featured,
               colors: colors,
-              itemBuilder: (context, item) => _buildStreetFoodCard(
-                item,
-                colors,
+              itemBuilder: (context, item) => StreetFoodCard(
+                food: item,
+                colors: colors,
+                voteCount: _streetFoodVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0),
+                distanceText: _getDistanceText(item.latitude, item.longitude),
                 showSponsoredBadge: true,
               ),
             ),
             const SizedBox(height: 26),
           ],
           if (recentlyViewed.isNotEmpty) ...[
-            _buildSectionTitle(
+            SectionHeader(
               title: 'Recently Viewed',
               subtitle: 'Jump back in quickly',
               colors: colors,
             ),
-            _buildCarousel<StreetFood>(
+            HorizontalCarousel<StreetFood>(
               height: 240,
               items: recentlyViewed,
               colors: colors,
-              itemBuilder: (context, item) => _buildStreetFoodCard(
-                item,
-                colors,
+              itemBuilder: (context, item) => StreetFoodCard(
+                food: item,
+                colors: colors,
+                voteCount: _streetFoodVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0),
+                distanceText: _getDistanceText(item.latitude, item.longitude),
               ),
             ),
             const SizedBox(height: 26),
           ],
           if (topBangers.isNotEmpty) ...[
-            _buildSectionTitle(
+            SectionHeader(
               title: 'Bangers',
               subtitle: 'Highest community upvote ratio',
               colors: colors,
             ),
-            _buildCarousel<StreetFood>(
+            HorizontalCarousel<StreetFood>(
               height: 240,
               items: topBangers,
               colors: colors,
-              itemBuilder: (context, item) => _buildStreetFoodCard(
-                item,
-                colors,
+              itemBuilder: (context, item) => StreetFoodCard(
+                food: item,
+                colors: colors,
+                voteCount: _streetFoodVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0),
+                distanceText: _getDistanceText(item.latitude, item.longitude),
                 showBangerBadge: true,
               ),
             ),
             const SizedBox(height: 26),
           ],
           if (nearby.isNotEmpty) ...[
-            _buildSectionTitle(
+            SectionHeader(
               title: 'Nearby',
               subtitle: 'Hawker centres around you',
               colors: colors,
             ),
-            _buildCarousel<StreetFood>(
+            HorizontalCarousel<StreetFood>(
               height: 240,
               items: nearby,
               colors: colors,
-              itemBuilder: (context, item) =>
-                  _buildStreetFoodCard(item, colors),
+              itemBuilder: (context, item) => StreetFoodCard(
+                food: item,
+                colors: colors,
+                voteCount: _streetFoodVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0),
+                distanceText: _getDistanceText(item.latitude, item.longitude),
+              ),
             ),
             const SizedBox(height: 26),
           ],
           if (veggie.isNotEmpty) ...[
-            _buildSectionTitle(
+            SectionHeader(
               title: 'Veggie',
               subtitle: 'Plant-based favourites',
               colors: colors,
             ),
-            _buildCarousel<StreetFood>(
+            HorizontalCarousel<StreetFood>(
               height: 240,
               items: veggie,
               colors: colors,
-              itemBuilder: (context, item) =>
-                  _buildStreetFoodCard(item, colors),
+              itemBuilder: (context, item) => StreetFoodCard(
+                food: item,
+                colors: colors,
+                voteCount: _streetFoodVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0),
+                distanceText: _getDistanceText(item.latitude, item.longitude),
+              ),
             ),
             const SizedBox(height: 26),
           ],
           if (halal.isNotEmpty) ...[
-            _buildSectionTitle(
+            SectionHeader(
               title: 'Halal',
               subtitle: 'Halal-certified picks',
               colors: colors,
             ),
-            _buildCarousel<StreetFood>(
+            HorizontalCarousel<StreetFood>(
               height: 240,
               items: halal,
               colors: colors,
-              itemBuilder: (context, item) =>
-                  _buildStreetFoodCard(item, colors),
+              itemBuilder: (context, item) => StreetFoodCard(
+                food: item,
+                colors: colors,
+                voteCount: _streetFoodVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0),
+                distanceText: _getDistanceText(item.latitude, item.longitude),
+              ),
             ),
             const SizedBox(height: 26),
           ],
           if (_hawkerCenters.isNotEmpty) ...[
-            _buildSectionTitle(
+            SectionHeader(
               title: 'Hawker Centres',
               subtitle: 'Discover the best local hubs',
               colors: colors,
             ),
-            _buildCarousel<HawkerCenter>(
+            HorizontalCarousel<HawkerCenter>(
               height: 240,
               items: _hawkerCenters,
               colors: colors,
-              itemBuilder: (context, item) => _buildHawkerCenterCard(
-                item,
-                colors,
+              itemBuilder: (context, item) => HawkerCenterCard(
+                center: item,
+                colors: colors,
+                distanceText: _getDistanceText(item.latitude, item.longitude),
               ),
             ),
             const SizedBox(height: 26),
           ],
           if (_menuItems.isNotEmpty) ...[
-            _buildSectionTitle(
+            SectionHeader(
               title: 'Menus',
               subtitle: 'Trending dishes near you',
               colors: colors,
             ),
-            _buildCarousel<MenuItem>(
+            HorizontalCarousel<MenuItem>(
               height: 240,
               items: _menuItems,
               colors: colors,
-              itemBuilder: (context, item) => _buildMenuItemCard(item, colors),
+              itemBuilder: (context, item) => MenuItemCard(
+                item: item,
+                colors: colors,
+                stallName: _stallNames[item.stallId] ?? 'Unknown Stall',
+                voteCount: _menuItemVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0),
+              ),
             ),
           ],
         ],
@@ -350,528 +383,15 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
-  Widget _buildSearchField(AppColorScheme colors) {
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: colors.backgroundCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.borderDefault),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.search, color: colors.textSecondary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search stalls, dishes, or centres',
-                hintStyle: TextStyle(color: colors.textSecondary),
-                border: InputBorder.none,
-              ),
-              style: TextStyle(color: colors.textPrimary),
-            ),
-          ),
-          Icon(Icons.tune, color: colors.textSecondary),
-        ],
-      ),
+  String? _getDistanceText(double latitude, double longitude) {
+    if (_userPosition == null) return null;
+    
+    final distance = _locationService.calculateDistance(
+      _userPosition!.latitude,
+      _userPosition!.longitude,
+      latitude,
+      longitude,
     );
-  }
-
-  Widget _buildSectionTitle({
-    required String title,
-    required String subtitle,
-    required AppColorScheme colors,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(fontSize: 13, color: colors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCarousel<T>({
-    required double height,
-    required List<T> items,
-    required AppColorScheme colors,
-    required Widget Function(BuildContext, T) itemBuilder,
-  }) {
-    if (items.isEmpty) {
-      return SizedBox(
-        height: height,
-        child: Center(
-          child: Text(
-            'Nothing to show yet',
-            style: TextStyle(color: colors.textSecondary),
-          ),
-        ),
-      );
-    }
-
-    final controller = PageController(viewportFraction: 0.82);
-    return SizedBox(
-      height: height + 18,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: ScrollConfiguration(
-          behavior: const _StretchScrollBehavior(),
-          child: PageView.builder(
-            controller: controller,
-            itemCount: items.length,
-            padEnds: false,
-            clipBehavior: Clip.none,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 14),
-                child: itemBuilder(context, items[index]),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStreetFoodCard(
-    StreetFood food,
-    AppColorScheme colors, {
-    bool showSponsoredBadge = false,
-    bool showBangerBadge = false,
-  }) {
-    // Calculate distance if we have user position
-    String? distanceText;
-    if (_userPosition != null) {
-      final distance = _locationService.calculateDistance(
-        _userPosition!.latitude,
-        _userPosition!.longitude,
-        food.latitude,
-        food.longitude,
-      );
-      distanceText = _locationService.formatDistance(distance);
-    }
-
-    // Get real vote counts
-    final voteCount = _streetFoodVotes[food.id] ?? VoteCount(upvotes: 0, downvotes: 0);
-
-    return _buildBaseCard(
-      colors: colors,
-      imageChild: food.imageUrl != null && food.imageUrl!.isNotEmpty
-          ? Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(22),
-                  ),
-                  child: Image.network(
-                    food.imageUrl!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(22),
-                          ),
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.brandPrimary.withValues(alpha: 0.8),
-                              AppColors.brandSecondary.withValues(alpha: 0.7),
-                            ],
-                          ),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.restaurant_menu,
-                            size: 42,
-                            color: Colors.white,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                if (showSponsoredBadge || showBangerBadge)
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Row(
-                      children: [
-                        if (showSponsoredBadge) ...[
-                          _buildStatusPill(
-                            'Sponsored',
-                            colors.statusSponsored,
-                            colors.textInverse,
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                        if (showBangerBadge) ...[
-                          _buildStatusPill(
-                            'Banger',
-                            colors.actionUpvote,
-                            colors.textInverse,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-              ],
-            )
-          : Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(22),
-                ),
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.brandPrimary.withValues(alpha: 0.8),
-                    AppColors.brandSecondary.withValues(alpha: 0.7),
-                  ],
-                ),
-              ),
-              child: Stack(
-                children: [
-                  const Center(
-                    child: Icon(
-                      Icons.restaurant_menu,
-                      size: 42,
-                      color: Colors.white,
-                    ),
-                  ),
-                  if (showSponsoredBadge || showBangerBadge)
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Row(
-                        children: [
-                          if (showSponsoredBadge) ...[
-                            _buildStatusPill(
-                              'Sponsored',
-                              colors.statusSponsored,
-                              colors.textInverse,
-                            ),
-                            const SizedBox(width: 6),
-                          ],
-                          if (showBangerBadge) ...[
-                            _buildStatusPill(
-                              'Banger',
-                              colors.actionUpvote,
-                              colors.textInverse,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-      title: food.name,
-      subtitle: distanceText != null
-          ? '${food.description ?? 'Street Food'} • $distanceText'
-          : food.description ?? 'Street Food',
-      footer: Row(
-        children: [
-          _buildScoreChip(
-            voteCount.upvotes,
-            voteCount.downvotes,
-            colors.actionUpvote,
-            colors.actionDownvote,
-          ),
-          const SizedBox(width: 10),
-          _buildVoteIndicator(
-            Icons.thumb_up_outlined,
-            voteCount.upvotes,
-            colors.actionUpvote,
-          ),
-          const SizedBox(width: 8),
-          _buildVoteIndicator(
-            Icons.thumb_down_outlined,
-            voteCount.downvotes,
-            colors.actionDownvote,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHawkerCenterCard(
-    HawkerCenter center,
-    AppColorScheme colors,
-  ) {
-    // Calculate distance if we have user position
-    String? distanceText;
-    if (_userPosition != null) {
-      final distance = _locationService.calculateDistance(
-        _userPosition!.latitude,
-        _userPosition!.longitude,
-        center.latitude,
-        center.longitude,
-      );
-      distanceText = _locationService.formatDistance(distance);
-    }
-
-    return _buildBaseCard(
-      colors: colors,
-      imageChild: center.imageUrl != null && center.imageUrl!.isNotEmpty
-          ? ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(22),
-              ),
-              child: Image.network(
-                center.imageUrl!,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Icon(
-                      Icons.location_city,
-                      color: colors.textSecondary,
-                      size: 42,
-                    ),
-                  );
-                },
-              ),
-            )
-          : Center(
-              child: Icon(
-                Icons.location_city,
-                color: colors.textSecondary,
-                size: 42,
-              ),
-            ),
-      title: center.name,
-      subtitle: distanceText != null
-          ? '${center.address} • $distanceText'
-          : center.address,
-      footer: Row(
-        children: [
-          Icon(
-            Icons.map_outlined,
-            size: 16,
-            color: colors.textSecondary,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            'Tap to explore',
-            style: TextStyle(fontSize: 12, color: colors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMenuItemCard(MenuItem item, AppColorScheme colors) {
-    final stallName = _stallNames[item.stallId] ?? 'Unknown Stall';
-    final voteCount = _menuItemVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0);
-
-    return _buildBaseCard(
-      colors: colors,
-      imageChild: item.imageUrl != null && item.imageUrl!.isNotEmpty
-          ? ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(22),
-              ),
-              child: Image.network(
-                item.imageUrl!,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Icon(
-                      Icons.ramen_dining,
-                      color: colors.textSecondary,
-                      size: 36,
-                    ),
-                  );
-                },
-              ),
-            )
-          : Center(
-              child: Icon(
-                Icons.ramen_dining,
-                color: colors.textSecondary,
-                size: 36,
-              ),
-            ),
-      title: item.name,
-      subtitle: stallName,
-      footer: Row(
-        children: [
-          Text(
-            '\$${item.price.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: AppColors.brandPrimary,
-            ),
-          ),
-          if (voteCount.total > 0) ...[
-            const SizedBox(width: 10),
-            _buildScoreChip(
-              voteCount.upvotes,
-              voteCount.downvotes,
-              colors.actionUpvote,
-              colors.actionDownvote,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBaseCard({
-    required AppColorScheme colors,
-    required Widget imageChild,
-    required String title,
-    required String subtitle,
-    required Widget footer,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.backgroundCard,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(22),
-              ),
-              color: colors.backgroundGreyInformation,
-            ),
-            child: imageChild,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                footer,
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusPill(String text, Color background, Color foreground) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: foreground,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScoreChip(int upvotes, int downvotes, Color upColor,
-      Color downColor) {
-    final total = upvotes + downvotes;
-    final ratio = total == 0 ? 0 : (upvotes / total) * 100;
-    final isPositive = ratio >= 50;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: (isPositive ? upColor : downColor).withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        '${ratio.toStringAsFixed(0)}% ($total votes)',
-        style: TextStyle(
-          color: isPositive ? upColor : downColor,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVoteIndicator(IconData icon, int count, Color color) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 4),
-        Text(
-          '$count',
-          style: TextStyle(fontSize: 12, color: color),
-        ),
-      ],
-    );
-  }
-}
-
-class _StretchScrollBehavior extends ScrollBehavior {
-  const _StretchScrollBehavior();
-
-  @override
-  Widget buildOverscrollIndicator(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) {
-    return StretchingOverscrollIndicator(
-      axisDirection: details.direction,
-      child: child,
-      clipBehavior: Clip.none,
-    );
+    return _locationService.formatDistance(distance);
   }
 }
