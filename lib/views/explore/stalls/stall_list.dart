@@ -23,6 +23,7 @@ class _StallListViewState extends State<StallListView> {
   final Map<String, bool> _favorites = {};
   List<StreetFood>? _streetFoods;
   bool _isLoadingFavorites = false;
+  bool _isHawkerCenterFavorite = false;
 
   @override
   void initState() {
@@ -40,17 +41,37 @@ class _StallListViewState extends State<StallListView> {
           _streetFoods = foods;
         });
         _loadFavorites();
+        _loadHawkerCenterFavorite();
       }
     } catch (e) {
       // Error handling can be added here if needed
     }
   }
 
+  Future<void> _loadHawkerCenterFavorite() async {
+    if (_mapService.currentUser == null) return;
+    try {
+      final isFav = await _mapService.isHawkerCenterFavorite(
+        widget.hawkerCenter.id,
+      );
+      if (mounted) {
+        setState(() {
+          _isHawkerCenterFavorite = isFav;
+        });
+      }
+    } catch (e) {
+      // Silently handle
+    }
+  }
+
   Future<void> _loadFavorites() async {
-    if (_mapService.currentUser == null || _streetFoods == null || _isLoadingFavorites) return;
-    
+    if (_mapService.currentUser == null ||
+        _streetFoods == null ||
+        _isLoadingFavorites)
+      return;
+
     _isLoadingFavorites = true;
-    
+
     // Load all favorites at once without triggering setState multiple times
     final Map<String, bool> newFavorites = {};
     for (final food in _streetFoods!) {
@@ -63,14 +84,14 @@ class _StallListViewState extends State<StallListView> {
         }
       }
     }
-    
+
     // Update all favorites in a single setState
     if (mounted && newFavorites.isNotEmpty) {
       setState(() {
         _favorites.addAll(newFavorites);
       });
     }
-    
+
     _isLoadingFavorites = false;
   }
 
@@ -88,6 +109,31 @@ class _StallListViewState extends State<StallListView> {
       if (mounted) {
         setState(() {
           _favorites[streetFoodId] = !(_favorites[streetFoodId] ?? false);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
+    }
+  }
+
+  void _toggleHawkerCenterFavorite() async {
+    if (_mapService.currentUser == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const RegisterView()),
+      );
+      return;
+    }
+
+    try {
+      await _mapService.toggleHawkerCenterFavorite(widget.hawkerCenter.id);
+      if (mounted) {
+        setState(() {
+          _isHawkerCenterFavorite = !_isHawkerCenterFavorite;
         });
       }
     } catch (e) {
@@ -138,14 +184,37 @@ class _StallListViewState extends State<StallListView> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text(
-                  widget.hawkerCenter.name,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: colors.textPrimary,
-                  ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.hawkerCenter.name,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _isHawkerCenterFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color:
+                            _isHawkerCenterFavorite
+                                ? colors.actionFavorite
+                                : colors.textDisabled,
+                        size: 28,
+                      ),
+                      onPressed: _toggleHawkerCenterFavorite,
+                    ),
+                  ],
                 ),
               ),
             ],
