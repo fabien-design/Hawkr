@@ -213,7 +213,7 @@ class _SearchViewState extends State<SearchView> {
       nearby = _streetFoods.take(4).toList();
     }
     
-    // Top Bangers - for now just take first few until votes are implemented
+    // Top Bangers - TODO : for now just take first few until votes are implemented
     final topBangers = _streetFoods.take(5).toList();
 
     return SingleChildScrollView(
@@ -221,10 +221,6 @@ class _SearchViewState extends State<SearchView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          custom.SearchBar(
-            controller: _searchController,
-            colors: colors,
-          ),
           const SizedBox(height: 20),
           if (featured.isNotEmpty) ...[
             SectionHeader(
