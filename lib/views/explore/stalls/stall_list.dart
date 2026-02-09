@@ -21,6 +21,58 @@ class StallListView extends StatefulWidget {
 class _StallListViewState extends State<StallListView> {
   final MapService _mapService = MapService();
   final Map<String, bool> _favorites = {};
+  List<StreetFood>? _streetFoods;
+  bool _isLoadingFavorites = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final foods = await _mapService.getStreetFoodsByHawkerCenter(
+        widget.hawkerCenter.id,
+      );
+      if (mounted) {
+        setState(() {
+          _streetFoods = foods;
+        });
+        _loadFavorites();
+      }
+    } catch (e) {
+      // Error handling can be added here if needed
+    }
+  }
+
+  Future<void> _loadFavorites() async {
+    if (_mapService.currentUser == null || _streetFoods == null || _isLoadingFavorites) return;
+    
+    _isLoadingFavorites = true;
+    
+    // Load all favorites at once without triggering setState multiple times
+    final Map<String, bool> newFavorites = {};
+    for (final food in _streetFoods!) {
+      if (!_favorites.containsKey(food.id)) {
+        try {
+          final isFav = await _mapService.isStreetFoodFavorite(food.id);
+          newFavorites[food.id] = isFav;
+        } catch (e) {
+          // Silently handle individual favorite check errors
+        }
+      }
+    }
+    
+    // Update all favorites in a single setState
+    if (mounted && newFavorites.isNotEmpty) {
+      setState(() {
+        _favorites.addAll(newFavorites);
+      });
+    }
+    
+    _isLoadingFavorites = false;
+  }
 
   void _toggleFavorite(String streetFoodId) async {
     if (_mapService.currentUser == null) {
@@ -47,87 +99,64 @@ class _StallListViewState extends State<StallListView> {
     }
   }
 
-  Future<void> _checkFavoriteStatus(String streetFoodId) async {
-    if (_mapService.currentUser != null &&
-        !_favorites.containsKey(streetFoodId)) {
-      final isFav = await _mapService.isStreetFoodFavorite(streetFoodId);
-      if (mounted) {
-        setState(() {
-          _favorites[streetFoodId] = isFav;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = isDark ? AppColors.dark : AppColors.light;
 
-    return Column(
-      children: [
-        const SizedBox(height: 10),
-        Container(
-          width: 40,
-          height: 5,
-          decoration: BoxDecoration(
-            color: colors.borderDefault,
-            borderRadius: BorderRadius.circular(10),
-          ),
+    if (_streetFoods == null) {
+      return Center(
+        child: CircularProgressIndicator(color: colors.borderFocused),
+      );
+    }
+
+    if (_streetFoods!.isEmpty) {
+      return Center(
+        child: Text(
+          'No street foods found here.',
+          style: TextStyle(color: colors.textSecondary),
         ),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(
-            widget.hawkerCenter.name,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: colors.textPrimary,
-            ),
-          ),
-        ),
-        Expanded(
-          child: FutureBuilder<List<StreetFood>>(
-            future: _mapService.getStreetFoodsByHawkerCenter(
-              widget.hawkerCenter.id,
-            ),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(
-                  child: CircularProgressIndicator(color: colors.borderFocused),
-                );
-              }
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text(
-                    'Error: ${snapshot.error}',
-                    style: TextStyle(color: colors.textPrimary),
+      );
+    }
+
+    return ListView.builder(
+      controller: widget.scrollController,
+      padding: EdgeInsets.zero,
+      itemCount: _streetFoods!.length + 1, // +1 for header
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          // Header with drag handle and title
+          return Column(
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: colors.borderDefault,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  widget.hawkerCenter.name,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: colors.textPrimary,
                   ),
-                );
-              }
-              final streetFoods = snapshot.data ?? [];
-              if (streetFoods.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No street foods found here.',
-                    style: TextStyle(color: colors.textSecondary),
-                  ),
-                );
-              }
-              return ListView.builder(
-                controller: widget.scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: streetFoods.length,
-                itemBuilder: (context, index) {
-                  final food = streetFoods[index];
-                  _checkFavoriteStatus(food.id);
-                  return _buildStreetFoodCard(food, colors);
-                },
-              );
-            },
-          ),
-        ),
-      ],
+                ),
+              ),
+            ],
+          );
+        }
+        final food = _streetFoods![index - 1];
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _buildStreetFoodCard(food, colors),
+        );
+      },
     );
   }
 
