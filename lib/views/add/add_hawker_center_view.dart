@@ -158,17 +158,20 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: viewModel.isLoading ? null : _submit,
-                    child: viewModel.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(
-                            'Submit',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
+                    child:
+                        viewModel.isLoading
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Text(
+                              'Submit',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                   ),
                 ),
               ],
@@ -180,7 +183,9 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
   }
 
   Widget _buildAddressField(
-      AddHawkerCenterViewModel viewModel, AppColorScheme colors) {
+    AddHawkerCenterViewModel viewModel,
+    AppColorScheme colors,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -189,16 +194,17 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
           focusNode: _addressFocusNode,
           decoration: InputDecoration(
             labelText: 'Address',
-            suffixIcon: viewModel.isLoadingSuggestions
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : const Icon(Icons.search),
+            suffixIcon:
+                viewModel.isLoadingSuggestions
+                    ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                    : const Icon(Icons.search),
           ),
           validator: viewModel.validateAddress,
           onChanged: viewModel.searchAddress,
@@ -224,10 +230,11 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: viewModel.suggestions.length,
-              separatorBuilder: (_, __) => Divider(
-                height: 1,
-                color: colors.textSecondary.withValues(alpha: 0.2),
-              ),
+              separatorBuilder:
+                  (_, __) => Divider(
+                    height: 1,
+                    color: colors.textSecondary.withValues(alpha: 0.2),
+                  ),
               itemBuilder: (context, index) {
                 final suggestion = viewModel.suggestions[index];
                 return ListTile(
@@ -239,22 +246,20 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
                   ),
                   title: Text(
                     suggestion.displayName,
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: colors.textPrimary, fontSize: 14),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  subtitle: suggestion.country != null
-                      ? Text(
-                          suggestion.country!,
-                          style: TextStyle(
-                            color: colors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        )
-                      : null,
+                  subtitle:
+                      suggestion.country != null
+                          ? Text(
+                            suggestion.country!,
+                            style: TextStyle(
+                              color: colors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          )
+                          : null,
                   onTap: () {
                     viewModel.selectSuggestion(suggestion);
                     FocusScope.of(context).unfocus();
@@ -268,13 +273,16 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
   }
 
   Widget _buildMapPreview(
-      AddHawkerCenterViewModel viewModel, AppColorScheme colors) {
+    AddHawkerCenterViewModel viewModel,
+    AppColorScheme colors,
+  ) {
     final hasLocation = viewModel.latitude != 0.0 && viewModel.longitude != 0.0;
 
     // Default to Singapore if no location selected
-    final center = hasLocation
-        ? LatLng(viewModel.latitude, viewModel.longitude)
-        : const LatLng(1.3521, 103.8198);
+    final center =
+        hasLocation
+            ? LatLng(viewModel.latitude, viewModel.longitude)
+            : const LatLng(1.3521, 103.8198);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,9 +293,10 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: hasLocation
-                  ? Colors.green.withValues(alpha: 0.5)
-                  : colors.textSecondary.withValues(alpha: 0.3),
+              color:
+                  hasLocation
+                      ? Colors.green.withValues(alpha: 0.5)
+                      : colors.textSecondary.withValues(alpha: 0.3),
               width: hasLocation ? 2 : 1,
             ),
           ),

@@ -5,14 +5,16 @@ import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/core/utils/error_handler.dart';
 
 class RegisterView extends StatefulWidget {
-  const RegisterView({super.key});
+  final AuthService? authService;
+
+  const RegisterView({super.key, this.authService});
 
   @override
   State<RegisterView> createState() => _RegisterViewState();
 }
 
 class _RegisterViewState extends State<RegisterView> {
-  final authService = AuthService();
+  late final AuthService authService = widget.authService ?? AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -23,21 +25,20 @@ class _RegisterViewState extends State<RegisterView> {
     final confirmPassword = _confirmPasswordController.text;
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
       return;
     }
 
     try {
-      await authService.signUp(
-        email: email.trim(),
-        password: password.trim(),
-      );
+      await authService.signUp(email: email.trim(), password: password.trim());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Account created successfully! Please check your email to verify."),
+            content: Text(
+              "Account created successfully! Please check your email to verify.",
+            ),
           ),
         );
         Navigator.of(context).pop(true);
@@ -48,7 +49,7 @@ class _RegisterViewState extends State<RegisterView> {
           e,
           fallbackMessage: "An error occurred during registration",
         );
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -66,40 +67,28 @@ class _RegisterViewState extends State<RegisterView> {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: const CustomAppBar(
-        title: 'Sign Up',
-        showBackButton: true,
-      ),
+      appBar: const CustomAppBar(title: 'Sign Up', showBackButton: true),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
             controller: _emailController,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-            ),
+            decoration: const InputDecoration(labelText: 'Email'),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _passwordController,
             obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Password',
-            ),
+            decoration: const InputDecoration(labelText: 'Password'),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _confirmPasswordController,
             obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Confirm Password',
-            ),
+            decoration: const InputDecoration(labelText: 'Confirm Password'),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: register,
-            child: const Text("Sign Up"),
-          ),
+          ElevatedButton(onPressed: register, child: const Text("Sign Up")),
           const SizedBox(height: 16),
           GestureDetector(
             onTap: () => Navigator.pop(context),
@@ -122,7 +111,7 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

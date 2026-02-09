@@ -38,14 +38,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: showBackButton,
       iconTheme: IconThemeData(color: colors.textPrimary),
       actions: actions,
-      shape: showBottomBorder
-          ? Border(
-              bottom: BorderSide(
-                color: colors.borderDefault,
-                width: 1,
-              ),
-            )
-          : null,
+      shape:
+          showBottomBorder
+              ? Border(
+                bottom: BorderSide(color: colors.borderDefault, width: 1),
+              )
+              : null,
     );
   }
 }

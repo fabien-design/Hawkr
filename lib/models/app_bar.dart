@@ -4,8 +4,5 @@ class AppBar {
   final String title;
   final AppColorScheme colors;
 
-  AppBar({
-    required this.title,
-    required this.colors,
-  });
+  AppBar({required this.title, required this.colors});
 }

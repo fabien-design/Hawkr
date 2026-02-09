@@ -10,7 +10,6 @@ class MenuItemDetails extends StatefulWidget {
   State<MenuItemDetails> createState() => _MenuItemDetailsState();
 }
 
-
 class _MenuItemDetailsState extends State<MenuItemDetails> {
   bool _isLiked = false;
   bool _isDisliked = false;
@@ -80,10 +79,7 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
                   // Vegetarian tag
                   Row(
                     children: [
-                      Text(
-                        '🌿',
-                        style: TextStyle(fontSize: 14),
-                      ),
+                      Text('🌿', style: TextStyle(fontSize: 14)),
                       const SizedBox(width: 4),
                       Text(
                         'vegetarian',
@@ -125,7 +121,10 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
   }
 
   Widget _buildImageSection(
-      BuildContext context, AppColorScheme colors, double screenWidth) {
+    BuildContext context,
+    AppColorScheme colors,
+    double screenWidth,
+  ) {
     return SizedBox(
       height: 300,
       width: screenWidth,
@@ -137,20 +136,19 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
             Image.network(
               widget.imageUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: colors.borderDefault,
-                child: Icon(
-                  Icons.restaurant,
-                  size: 80,
-                  color: colors.textDisabled,
-                ),
-              ),
+              errorBuilder:
+                  (context, error, stackTrace) => Container(
+                    color: colors.borderDefault,
+                    child: Icon(
+                      Icons.restaurant,
+                      size: 80,
+                      color: colors.textDisabled,
+                    ),
+                  ),
             )
           else
             Container(
-              decoration: BoxDecoration(
-                color: colors.borderDefault,
-              ),
+              decoration: BoxDecoration(color: colors.borderDefault),
               child: Icon(
                 Icons.restaurant,
                 size: 80,
@@ -217,23 +215,24 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: categories.map((category) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: colors.borderDefault),
-          ),
-          child: Text(
-            category,
-            style: TextStyle(
-              fontSize: 13,
-              color: colors.textPrimary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        );
-      }).toList(),
+      children:
+          categories.map((category) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: colors.borderDefault),
+              ),
+              child: Text(
+                category,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
     );
   }
 
@@ -273,19 +272,12 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
             color: const Color(0xFFFDE8E0),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            size: 24,
-            color: AppColors.brandPrimary,
-          ),
+          child: Icon(icon, size: 24, color: AppColors.brandPrimary),
         ),
         const SizedBox(height: 6),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF6B6B6B),
-          ),
+          style: const TextStyle(fontSize: 12, color: Color(0xFF6B6B6B)),
         ),
       ],
     );
@@ -293,78 +285,83 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
 
   Widget _buildCommunityRatingCard(AppColorScheme colors) {
     return Container(
-        decoration: BoxDecoration(
-          color: colors.backgroundCard,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Thumbs up button
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isLiked = !_isLiked;
-                  if (_isLiked) _isDisliked = false;
-                });
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.brandSuccess.withValues(alpha: _isLiked ? 0.3 : 0.15),
-                  shape: BoxShape.circle,
+      decoration: BoxDecoration(
+        color: colors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Thumbs up button
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isLiked = !_isLiked;
+                if (_isLiked) _isDisliked = false;
+              });
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.brandSuccess.withValues(
+                  alpha: _isLiked ? 0.3 : 0.15,
                 ),
-                child: Icon(
-                  _isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                  size: 20,
-                  color: AppColors.brandSuccess,
-                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                size: 20,
+                color: AppColors.brandSuccess,
               ),
             ),
-            const SizedBox(width: 16),
-            // Percentage
-            Text(
-              '96%',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: _isDisliked ? AppColors.brandPrimary : AppColors.brandSuccess,
+          ),
+          const SizedBox(width: 16),
+          // Percentage
+          Text(
+            '96%',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color:
+                  _isDisliked ? AppColors.brandPrimary : AppColors.brandSuccess,
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Thumbs down button
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isDisliked = !_isDisliked;
+                if (_isDisliked) _isLiked = false;
+              });
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.brandPrimary.withValues(
+                  alpha: _isDisliked ? 0.25 : 0.12,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _isDisliked ? Icons.thumb_down : Icons.thumb_down_outlined,
+                size: 20,
+                color: AppColors.brandPrimary,
               ),
             ),
-            const SizedBox(width: 16),
-            // Thumbs down button
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isDisliked = !_isDisliked;
-                  if (_isDisliked) _isLiked = false;
-                });
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimary.withValues(alpha: _isDisliked ? 0.25 : 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _isDisliked ? Icons.thumb_down : Icons.thumb_down_outlined,
-                  size: 20,
-                  color: AppColors.brandPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 }

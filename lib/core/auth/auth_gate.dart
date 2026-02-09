@@ -19,9 +19,7 @@ class AuthGate extends StatelessWidget {
           return Scaffold(
             backgroundColor: colors.backgroundApp,
             body: Center(
-              child: CircularProgressIndicator(
-                color: AppColors.brandPrimary,
-              ),
+              child: CircularProgressIndicator(color: AppColors.brandPrimary),
             ),
           );
         }

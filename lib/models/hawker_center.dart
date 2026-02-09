@@ -28,9 +28,10 @@ class HawkerCenter {
       latitude: (json['latitude'] as num).toDouble(),
       description: json['description'] as String?,
       imageUrl: json['image_url'] as String?,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : null,
     );
   }
 

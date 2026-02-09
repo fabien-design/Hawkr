@@ -6,14 +6,16 @@ import 'package:hawklap/core/utils/error_handler.dart';
 import '../register/register_view.dart';
 
 class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+  final AuthService? authService;
+
+  const LoginView({super.key, this.authService});
 
   @override
   State<LoginView> createState() => _LoginViewState();
 }
 
 class _LoginViewState extends State<LoginView> {
-  final authService = AuthService();
+  late final AuthService authService = widget.authService ?? AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -35,7 +37,7 @@ class _LoginViewState extends State<LoginView> {
           e,
           fallbackMessage: "An error occurred during login",
         );
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -53,40 +55,28 @@ class _LoginViewState extends State<LoginView> {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: const CustomAppBar(
-        title: 'Login',
-        showBackButton: true,
-      ),
+      appBar: const CustomAppBar(title: 'Login', showBackButton: true),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
             controller: _emailController,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-            ),
+            decoration: const InputDecoration(labelText: 'Email'),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _passwordController,
             obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Password',
-            ),
+            decoration: const InputDecoration(labelText: 'Password'),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: login,
-            child: const Text("Login"),
-          ),
+          ElevatedButton(onPressed: login, child: const Text("Login")),
           const SizedBox(height: 16),
           GestureDetector(
             onTap: () async {
               final result = await Navigator.push<bool>(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const RegisterView(),
-                ),
+                MaterialPageRoute(builder: (context) => const RegisterView()),
               );
               if (result == true && mounted) {
                 Navigator.of(context).pop(true);
@@ -111,7 +101,7 @@ class _LoginViewState extends State<LoginView> {
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

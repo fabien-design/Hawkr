@@ -135,14 +135,37 @@ class _StallListViewState extends State<StallListView> {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(25),
                 ),
-                child: Container(
-                  height: 150,
-                  width: double.infinity,
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.image, size: 50, color: Colors.white),
-                  ),
-                ),
+                child:
+                    food.imageUrl != null
+                        ? Image.network(
+                          food.imageUrl!,
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (context, error, stackTrace) => Container(
+                                height: 150,
+                                width: double.infinity,
+                                color: Colors.grey[300],
+                                child: const Icon(
+                                  Icons.image,
+                                  size: 50,
+                                  color: Colors.white,
+                                ),
+                              ),
+                        )
+                        : Container(
+                          height: 150,
+                          width: double.infinity,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(
+                              Icons.image,
+                              size: 50,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
               ),
               Positioned(
                 top: 15,

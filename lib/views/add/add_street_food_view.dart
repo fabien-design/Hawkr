@@ -42,7 +42,8 @@ class _AddStreetFoodContentState extends State<_AddStreetFoodContent> {
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Street food stall submitted for review')),
+            content: Text('Street food stall submitted for review'),
+          ),
         );
         Navigator.pop(context);
       } else if (viewModel.errorMessage != null && mounted) {
@@ -114,21 +115,20 @@ class _AddStreetFoodContentState extends State<_AddStreetFoodContent> {
                 decoration: const InputDecoration(
                   labelText: 'Select Hawker Center',
                 ),
-                items: viewModel.hawkerCenters.map((center) {
-                  return DropdownMenuItem(
-                    value: center.id,
-                    child: Text(center.name),
-                  );
-                }).toList(),
+                items:
+                    viewModel.hawkerCenters.map((center) {
+                      return DropdownMenuItem(
+                        value: center.id,
+                        child: Text(center.name),
+                      );
+                    }).toList(),
                 onChanged: viewModel.setSelectedHawkerCenter,
                 validator: viewModel.validateHawkerCenter,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: viewModel.nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Stall Name',
-                ),
+                decoration: const InputDecoration(labelText: 'Stall Name'),
                 validator: viewModel.validateName,
               ),
               const SizedBox(height: 16),
@@ -153,17 +153,20 @@ class _AddStreetFoodContentState extends State<_AddStreetFoodContent> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: viewModel.isLoading ? null : _submit,
-                  child: viewModel.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text(
-                          'Submit',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
+                  child:
+                      viewModel.isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                 ),
               ),
             ],
@@ -174,13 +177,16 @@ class _AddStreetFoodContentState extends State<_AddStreetFoodContent> {
   }
 
   Widget _buildInteractiveMap(
-      AddStreetFoodViewModel viewModel, AppColorScheme colors) {
+    AddStreetFoodViewModel viewModel,
+    AppColorScheme colors,
+  ) {
     final hasHawkerCenter = viewModel.selectedHawkerCenter != null;
 
     // Default to Singapore
-    final center = hasHawkerCenter
-        ? LatLng(viewModel.latitude, viewModel.longitude)
-        : const LatLng(1.3521, 103.8198);
+    final center =
+        hasHawkerCenter
+            ? LatLng(viewModel.latitude, viewModel.longitude)
+            : const LatLng(1.3521, 103.8198);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,9 +206,10 @@ class _AddStreetFoodContentState extends State<_AddStreetFoodContent> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: hasHawkerCenter
-                  ? colors.borderFocused
-                  : colors.textSecondary.withValues(alpha: 0.3),
+              color:
+                  hasHawkerCenter
+                      ? colors.borderFocused
+                      : colors.textSecondary.withValues(alpha: 0.3),
               width: hasHawkerCenter ? 2 : 1,
             ),
           ),
@@ -454,9 +461,10 @@ class _AddStreetFoodContentState extends State<_AddStreetFoodContent> {
 class _DirectionPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.4)
-      ..style = PaintingStyle.fill;
+    final paint =
+        Paint()
+          ..color = Colors.blue.withValues(alpha: 0.4)
+          ..style = PaintingStyle.fill;
 
     final path = ui.Path();
     final center = Offset(size.width / 2, size.height / 2);

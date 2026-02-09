@@ -15,9 +15,7 @@ class AddView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: const CustomAppBar(
-        title: 'Add',
-      ),
+      appBar: const CustomAppBar(title: 'Add'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -90,50 +88,50 @@ class AddView extends StatelessWidget {
               color: colors.backgroundGreyInformation,
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Icon(
-                          Icons.info_outline,
-                          color: colors.textSecondary,
-                          size: 24,
-                        ),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Icon(
+                        Icons.info_outline,
+                        color: colors.textSecondary,
+                        size: 24,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Community Validation',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textPrimary,
-                              ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Community Validation',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'All submissions are reviewed by the community. Validated contributions earn badges and increase your reputation.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colors.textSecondary,
-                                height: 1.4,
-                              ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'All submissions are reviewed by the community. Validated contributions earn badges and increase your reputation.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: colors.textSecondary,
+                              height: 1.4,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -166,9 +164,7 @@ class _AddOptionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
           child: Row(
             children: [
               Container(
@@ -178,11 +174,7 @@ class _AddOptionCard extends StatelessWidget {
                   color: AppColors.brandPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppColors.brandPrimary,
-                  size: 24,
-                ),
+                child: Icon(icon, color: AppColors.brandPrimary, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(

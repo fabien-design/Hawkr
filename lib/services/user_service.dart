@@ -10,11 +10,12 @@ class UserService {
     if (authUser == null) return null;
 
     try {
-      final profile = await _supabase
-          .from(_table)
-          .select()
-          .eq('id', authUser.id)
-          .maybeSingle();
+      final profile =
+          await _supabase
+              .from(_table)
+              .select()
+              .eq('id', authUser.id)
+              .maybeSingle();
 
       return AppUser.fromSupabase(
         id: authUser.id,
@@ -23,19 +24,13 @@ class UserService {
       );
     } catch (e) {
       // Profile might not exist yet, return basic user
-      return AppUser(
-        id: authUser.id,
-        email: authUser.email ?? '',
-      );
+      return AppUser(id: authUser.id, email: authUser.email ?? '');
     }
   }
 
   Future<AppUser?> getById(String id) async {
-    final response = await _supabase
-        .from(_table)
-        .select()
-        .eq('id', id)
-        .maybeSingle();
+    final response =
+        await _supabase.from(_table).select().eq('id', id).maybeSingle();
 
     return response != null ? AppUser.fromJson(response) : null;
   }
@@ -44,9 +39,7 @@ class UserService {
     required String userId,
     String? displayName,
   }) async {
-    final data = <String, dynamic>{
-      'id': userId,
-    };
+    final data = <String, dynamic>{'id': userId};
 
     if (displayName != null) {
       data['display_name'] = displayName.isEmpty ? null : displayName;
@@ -54,12 +47,13 @@ class UserService {
 
     final authUser = _supabase.auth.currentUser;
 
-    final response = await _supabase
-        .from(_table)
-        .update(data)
-        .eq('id', userId)
-        .select()
-        .single();
+    final response =
+        await _supabase
+            .from(_table)
+            .update(data)
+            .eq('id', userId)
+            .select()
+            .single();
     return AppUser.fromSupabase(
       id: userId,
       email: authUser?.email ?? '',

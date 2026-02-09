@@ -48,6 +48,7 @@ class StreetFood {
   final String id;
   final String name;
   final String? description;
+  final String? imageUrl;
   final String hawkerCenterId;
   final double latitude;
   final double longitude;
@@ -57,6 +58,7 @@ class StreetFood {
     required this.id,
     required this.name,
     this.description,
+    this.imageUrl,
     required this.hawkerCenterId,
     required this.latitude,
     required this.longitude,
@@ -68,6 +70,7 @@ class StreetFood {
       id: json['id'],
       name: json['name'],
       description: json['description'],
+      imageUrl: json['image_url'],
       hawkerCenterId: json['hawker_center_id'],
       latitude: json['latitude'].toDouble(),
       longitude: json['longitude'].toDouble(),

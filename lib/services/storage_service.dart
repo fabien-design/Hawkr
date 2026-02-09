@@ -4,7 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class StorageService {
   final _menuItemStorage = Supabase.instance.client.storage.from('menu-items');
   final _stallStorage = Supabase.instance.client.storage.from('street-food');
-  final _hawkerCenterStorage = Supabase.instance.client.storage.from('hawker-centers');
+  final _hawkerCenterStorage = Supabase.instance.client.storage.from(
+    'hawker-centers',
+  );
 
   Future<String> uploadMenuItemImage(String fileName, File file) async {
     await _menuItemStorage.upload(fileName, file);

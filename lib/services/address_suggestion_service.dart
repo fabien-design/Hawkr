@@ -18,11 +18,7 @@ class AddressSuggestionService {
       return [];
     }
 
-    final queryParams = {
-      'q': query,
-      'limit': limit.toString(),
-      'lang': lang,
-    };
+    final queryParams = {'q': query, 'limit': limit.toString(), 'lang': lang};
 
     final biasLat = lat ?? 1.3521;
     final biasLon = lon ?? 103.8198;
@@ -33,11 +29,11 @@ class AddressSuggestionService {
 
     try {
       final response = await http.get(
-          uri,
+        uri,
         headers: {
           'User-Agent': 'Hawkr/1.0 (fabienrozier60@gmail.com)',
           'Accept': 'application/json',
-        }
+        },
       );
 
       debugPrint('${response.statusCode}');
