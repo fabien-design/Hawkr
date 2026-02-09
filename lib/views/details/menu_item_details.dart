@@ -29,7 +29,6 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
   bool _isDisliked = false;
   int _upvotes = 0;
   int _downvotes = 0;
-  bool _isVoting = false; // prevent double-tap
 
   @override
   void initState() {
@@ -64,40 +63,66 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
   }
 
   Future<void> _handleVote(VoteAction action) async {
-    if (widget.item.id == null || _isVoting) return;
+    if (widget.item.id == null) return;
 
-    setState(() => _isVoting = true);
+    // Save previous state for rollback
+    final prevLiked = _isLiked;
+    final prevDisliked = _isDisliked;
+    final prevUpvotes = _upvotes;
+    final prevDownvotes = _downvotes;
 
+    // Apply optimistic update immediately
+    setState(() {
+      switch (action) {
+        case VoteAction.upvote:
+          _upvotes += 1;
+          if (_isDisliked) _downvotes -= 1;
+          _isLiked = true;
+          _isDisliked = false;
+          break;
+        case VoteAction.downvote:
+          _downvotes += 1;
+          if (_isLiked) _upvotes -= 1;
+          _isDisliked = true;
+          _isLiked = false;
+          break;
+        case VoteAction.removeVote:
+          if (_isLiked) _upvotes -= 1;
+          if (_isDisliked) _downvotes -= 1;
+          _isLiked = false;
+          _isDisliked = false;
+          break;
+      }
+    });
+
+    // Fire DB call in background — revert on failure
     try {
       switch (action) {
         case VoteAction.upvote:
-          // Insert or update to 1
           await _voteService.voteMenuItem(widget.item.id!, 1);
           break;
         case VoteAction.downvote:
-          // Insert or update to -1
           await _voteService.voteMenuItem(widget.item.id!, -1);
           break;
         case VoteAction.removeVote:
-          // Delete the row
           await _voteService.removeMenuItemVote(widget.item.id!);
           break;
       }
-
-      // Always re-fetch from database so UI is truthful
-      await _loadVoteData();
     } catch (e) {
+      // Rollback to previous state
       if (mounted) {
+        setState(() {
+          _isLiked = prevLiked;
+          _isDisliked = prevDisliked;
+          _upvotes = prevUpvotes;
+          _downvotes = prevDownvotes;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Could not update vote: $e'),
             backgroundColor: Colors.red,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isVoting = false);
       }
     }
   }
