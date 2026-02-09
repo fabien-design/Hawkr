@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hawklap/core/auth/auth_service.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
@@ -18,6 +19,10 @@ class MainNavbar extends StatefulWidget {
 class _MainNavbarState extends State<MainNavbar> {
   int _currentIndex = 0;
   final authService = AuthService();
+  late StreamSubscription _authSubscription;
+
+  // UniqueKey per tab to force rebuild when needed
+  final List<UniqueKey> _tabKeys = List.generate(5, (_) => UniqueKey());
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
     5,
@@ -34,6 +39,31 @@ class _MainNavbarState extends State<MainNavbar> {
 
   // require authentication: Favourites (2), Add (3), Profile (4)
   final Set<int> _protectedIndices = const {2, 3, 4};
+
+  @override
+  void initState() {
+    super.initState();
+    _authSubscription = authService.authStateChanges.listen((authState) {
+      if (!mounted) return;
+      setState(() {
+        // Reset protected tabs so they rebuild fresh
+        for (final index in _protectedIndices) {
+          _tabKeys[index] = UniqueKey();
+          _navigatorKeys[index] = GlobalKey<NavigatorState>();
+        }
+        // Redirect to Explore on logout
+        if (!authService.isLoggedIn() && _protectedIndices.contains(_currentIndex)) {
+          _currentIndex = 0;
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
+  }
 
   void _onTabTapped(int index) async {
     if (index == _currentIndex) {
@@ -80,13 +110,16 @@ class _MainNavbarState extends State<MainNavbar> {
         body: IndexedStack(
           index: _currentIndex,
           children: List.generate(_views.length, (index) {
-            return Navigator(
-              key: _navigatorKeys[index],
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => _views[index],
-                );
-              },
+            return KeyedSubtree(
+              key: _tabKeys[index],
+              child: Navigator(
+                key: _navigatorKeys[index],
+                onGenerateRoute: (settings) {
+                  return MaterialPageRoute(
+                    builder: (_) => _views[index],
+                  );
+                },
+              ),
             );
           }),
         ),
