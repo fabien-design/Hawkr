@@ -85,10 +85,7 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
                     viewModel.hawkerCenters.map((hc) {
                       return DropdownMenuItem(
                         value: hc.id,
-                        child: Text(
-                          hc.name,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(hc.name, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                 onChanged: viewModel.setSelectedHawkerCenter,
@@ -137,6 +134,59 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
                 keyboardType: TextInputType.number,
                 validator: viewModel.validatePrice,
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Tags',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (viewModel.tags.isEmpty)
+                Text(
+                  'No tags available',
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children:
+                      viewModel.tags.map((tag) {
+                        final isSelected = viewModel.selectedTagIds.contains(
+                          tag.id,
+                        );
+                        return GestureDetector(
+                          onTap: () => viewModel.toggleTag(tag.id),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  isSelected
+                                      ? AppColors.brandPrimary
+                                      : colors.backgroundGreyInformation,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              tag.name,
+                              style: TextStyle(
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : colors.textPrimary,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                ),
               const SizedBox(height: 16),
               ImagePickerField(
                 imageFile: viewModel.imageFile,
