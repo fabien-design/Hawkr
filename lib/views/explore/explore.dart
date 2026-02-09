@@ -162,8 +162,8 @@ class _ExploreViewState extends State<ExploreView> {
                   const SizedBox(height: 20),
                   Text(
                     _minRating != null
-                        ? 'Recommended Dishes (\\\$${_priceRange.start.round()} - \\\$${_priceRange.end.round()}, +${_minRating!.toInt()}%)'
-                        : 'Recommended Dishes (\\\$${_priceRange.start.round()} - \\\$${_priceRange.end.round()})',
+                        ? 'Recommended Dishes (\$${_priceRange.start.round()} - \$${_priceRange.end.round()}, +${_minRating!.toInt()}%)'
+                        : 'Recommended Dishes (\$${_priceRange.start.round()} - \$${_priceRange.end.round()})',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -285,7 +285,7 @@ class _ExploreViewState extends State<ExploreView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '\\\$${item.price.toStringAsFixed(2)}',
+                  '\$${item.price.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: AppColors.brandPrimary,
                     fontWeight: FontWeight.bold,
