@@ -3,6 +3,7 @@ import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/core/theme/theme_provider.dart';
 import 'package:hawklap/viewmodels/profile_viewmodel.dart';
+import 'package:hawklap/views/details/menu_item_details.dart';
 import 'package:provider/provider.dart';
 
 class ProfileView extends StatelessWidget {
@@ -77,6 +78,17 @@ class _ProfileContentState extends State<_ProfileContent> {
                         )
                       ),
                     const SizedBox(height: 24),
+
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const MenuItemDetails()),
+                        );
+                      },
+                      child: Text('Go to Second Screen'),
+                    ),
+                    
                     // Edit profile section
                     if (viewModel.isEditing) ...[
                       Form(
