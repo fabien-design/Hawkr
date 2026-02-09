@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+  import 'package:flutter/material.dart';
 
 class VoteScoreChip extends StatelessWidget {
   final int upvotes;
@@ -17,7 +17,27 @@ class VoteScoreChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = upvotes + downvotes;
-    final ratio = total == 0 ? 0 : (upvotes / total) * 100;
+
+    // No votes at all - show "no ratings" in gray
+    if (total == 0) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          'no ratings',
+          style: TextStyle(
+            color: Colors.grey.shade600,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+
+    final ratio = (upvotes / total) * 100;
     final isPositive = ratio >= 50;
 
     return Container(
@@ -29,7 +49,7 @@ class VoteScoreChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        '${ratio.toStringAsFixed(0)}% ($total votes)',
+        '${ratio.toStringAsFixed(0)}%',
         style: TextStyle(
           color: isPositive ? upvoteColor : downvoteColor,
           fontSize: 12,

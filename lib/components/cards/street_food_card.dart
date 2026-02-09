@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hawklap/components/cards/base_info_card.dart';
 import 'package:hawklap/components/common/status_badge.dart';
-import 'package:hawklap/components/common/vote_counter.dart';
 import 'package:hawklap/components/common/vote_score_chip.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/models/street_food.dart';
@@ -35,27 +34,11 @@ class StreetFoodCard extends StatelessWidget {
           distanceText != null
               ? '${food.description ?? 'Street Food'} • $distanceText'
               : food.description ?? 'Street Food',
-      footer: Row(
-        children: [
-          VoteScoreChip(
-            upvotes: voteCount.upvotes,
-            downvotes: voteCount.downvotes,
-            upvoteColor: colors.actionUpvote,
-            downvoteColor: colors.actionDownvote,
-          ),
-          const SizedBox(width: 10),
-          VoteCounter(
-            icon: Icons.thumb_up_outlined,
-            count: voteCount.upvotes,
-            color: colors.actionUpvote,
-          ),
-          const SizedBox(width: 8),
-          VoteCounter(
-            icon: Icons.thumb_down_outlined,
-            count: voteCount.downvotes,
-            color: colors.actionDownvote,
-          ),
-        ],
+      footer: VoteScoreChip(
+        upvotes: voteCount.upvotes,
+        downvotes: voteCount.downvotes,
+        upvoteColor: colors.actionUpvote,
+        downvoteColor: colors.actionDownvote,
       ),
     );
   }
