@@ -193,7 +193,7 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
                   icon: Icons.arrow_back,
                   onTap: () => Navigator.pop(context),
                   colors: colors,
-                  backgroundColor: Colors.black.withOpacity(0.5),
+                  backgroundColor: Colors.black.withValues(alpha: 0.5),
                   iconColor: Colors.white,
                 ),
               ],
@@ -306,7 +306,7 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -348,7 +348,7 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
                       ),
                     ),
                     Text(
-                      '${item.price.toStringAsFixed(0)}\$',
+                      '${item.price.toStringAsFixed(2)}\$',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

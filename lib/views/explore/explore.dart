@@ -217,6 +217,7 @@ class _ExploreViewState extends State<ExploreView> {
                         ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
                         : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.hawkr',
+                retinaMode: isDark ? RetinaMode.isHighDensity(context) : false,
               ),
               if (_currentPosition != null) ...[
                 CircleLayer(

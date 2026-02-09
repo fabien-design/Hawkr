@@ -3,7 +3,9 @@ import '../../core/theme/app_colors.dart';
 import '../../components/rating/rating_widget.dart';
 
 class MenuItemDetails extends StatefulWidget {
-  const MenuItemDetails({super.key});
+  final String? imageUrl;
+
+  const MenuItemDetails({super.key, this.imageUrl});
 
   @override
   State<MenuItemDetails> createState() => _MenuItemDetailsState();
@@ -89,7 +91,7 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
                   const Row(
                     children: [
                       Text('🌿', style: TextStyle(fontSize: 14)),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
                         'vegetarian',
                         style: TextStyle(

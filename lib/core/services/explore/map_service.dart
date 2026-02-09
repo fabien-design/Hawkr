@@ -40,7 +40,7 @@ class HawkerCenter {
       latitude: json['latitude'].toDouble(),
       longitude: json['longitude'].toDouble(),
       description: json['description'],
-      imageUrl: json['image_url'],
+      imageUrl: (json['image_url'] as String?)?.trim(),
       streetFoodCount: count,
     );
   }
@@ -81,7 +81,7 @@ class MenuItem {
       name: json['name'],
       price: (json['price'] as num).toDouble(),
       description: json['description'],
-      imageUrl: json['image_url'],
+      imageUrl: (json['image_url'] as String?)?.trim(),
       stallId: json['stall_id'],
       tags: tags,
     );
@@ -120,7 +120,7 @@ class StreetFood {
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      imageUrl: json['image_url'],
+      imageUrl: (json['image_url'] as String?)?.trim(),
       hawkerCenterId: json['hawker_center_id'],
       latitude: json['latitude'].toDouble(),
       longitude: json['longitude'].toDouble(),

@@ -52,7 +52,7 @@ class _FilterMenuState extends State<FilterMenu> {
           ),
           const SizedBox(height: 30),
           Text(
-            'Search Radius: ${_currentRadius.toStringAsFixed(1)} km',
+            'Search Radius: ${_currentRadius.toStringAsFixed(2)} km',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -66,7 +66,7 @@ class _FilterMenuState extends State<FilterMenu> {
             divisions: 19,
             activeColor: hawkColor,
             inactiveColor: hawkColor.withOpacity(0.2),
-            label: '${_currentRadius.toStringAsFixed(1)} km',
+            label: '${_currentRadius.toStringAsFixed(2)} km',
             onChanged: (value) {
               setState(() {
                 _currentRadius = value;

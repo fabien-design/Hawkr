@@ -11,7 +11,7 @@ class AddMenuItemView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AddMenuItemViewModel()..loadStalls(),
+      create: (_) => AddMenuItemViewModel()..loadHawkerCenters(),
       child: const _AddMenuItemContent(),
     );
   }
@@ -76,9 +76,34 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
               ),
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
-                initialValue: viewModel.selectedStallId,
+                value: viewModel.selectedHawkerCenterId,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Select Stall'),
+                decoration: const InputDecoration(
+                  labelText: 'Select Hawker Center',
+                ),
+                items:
+                    viewModel.hawkerCenters.map((hc) {
+                      return DropdownMenuItem(
+                        value: hc.id,
+                        child: Text(
+                          hc.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                onChanged: viewModel.setSelectedHawkerCenter,
+                validator: viewModel.validateHawkerCenter,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: viewModel.selectedStallId,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText:
+                      viewModel.isLoadingStalls
+                          ? 'Loading stalls...'
+                          : 'Select Stall',
+                ),
                 items:
                     viewModel.stalls.map((stall) {
                       return DropdownMenuItem(
@@ -89,7 +114,10 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
                         ),
                       );
                     }).toList(),
-                onChanged: viewModel.setSelectedStall,
+                onChanged:
+                    viewModel.selectedHawkerCenterId == null
+                        ? null
+                        : viewModel.setSelectedStall,
                 validator: viewModel.validateStall,
               ),
               const SizedBox(height: 16),

@@ -14,6 +14,7 @@ class ProfileViewModel extends ChangeNotifier {
   bool _isSaving = false;
   String? _errorMessage;
   bool _isEditing = false;
+  bool _disposed = false;
 
   AppUser? get user => _user;
   bool get isLoading => _isLoading;
@@ -107,7 +108,15 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   @override
+  void notifyListeners() {
+    if (!_disposed) {
+      super.notifyListeners();
+    }
+  }
+
+  @override
   void dispose() {
+    _disposed = true;
     displayNameController.dispose();
     super.dispose();
   }
