@@ -7,7 +7,6 @@ import 'package:hawklap/components/cards/street_food_card.dart';
 import 'package:hawklap/views/details/hawker_center_details.dart';
 import 'package:hawklap/views/details/menu_item_details.dart';
 import 'package:hawklap/components/search/horizontal_carousel.dart';
-import 'package:hawklap/components/search/search_bar.dart' as custom;
 import 'package:hawklap/components/search/section_header.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/models/hawker_center.dart';

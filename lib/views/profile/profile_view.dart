@@ -3,7 +3,6 @@ import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/core/theme/theme_provider.dart';
 import 'package:hawklap/viewmodels/profile_viewmodel.dart';
-import 'package:hawklap/views/details/menu_item_details.dart';
 import 'package:provider/provider.dart';
 
 class ProfileView extends StatelessWidget {
