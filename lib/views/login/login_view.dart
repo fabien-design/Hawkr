@@ -93,9 +93,22 @@ class _LoginViewState extends State<LoginView> {
               }
             },
             child: Center(
-              child: Text(
-                "Don't have an account? Sign Up",
-                style: TextStyle(color: colors.textSecondary),
+              child: Text.rich(
+                TextSpan(
+                  text: "Don't have an account? ",
+                  style: TextStyle(color: colors.textSecondary),
+                  children: const [
+                    TextSpan(
+                      text: 'Sign Up',
+                      style: TextStyle(
+                        color: AppColors.brandPrimary,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.brandPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           )

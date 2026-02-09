@@ -104,9 +104,22 @@ class _RegisterViewState extends State<RegisterView> {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Center(
-              child: Text(
-                "Already have an account? Login",
-                style: TextStyle(color: colors.textSecondary),
+              child: Text.rich(
+                TextSpan(
+                  text: "Already have an account? ",
+                  style: TextStyle(color: colors.textSecondary),
+                  children: const [
+                    TextSpan(
+                      text: 'Login',
+                      style: TextStyle(
+                        color: AppColors.brandPrimary,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.brandPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           )
