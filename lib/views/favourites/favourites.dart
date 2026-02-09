@@ -6,6 +6,7 @@ import 'package:hawklap/models/hawker_center.dart';
 import 'package:hawklap/models/street_food.dart';
 import 'package:hawklap/models/menu_item.dart';
 import 'package:hawklap/views/details/hawker_center_details.dart';
+import 'package:hawklap/views/details/menu_item_details.dart';
 import 'package:hawklap/views/login/login_view.dart';
 import 'package:hawklap/views/details/street_food_details.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -346,6 +347,17 @@ class _FavouritesViewState extends State<FavouritesView> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colors.backgroundCard,
       child: ListTile(
+        onTap: () {
+          if (mi.id != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => MenuItemDetailsView(stallId: mi.id!, item: mi),
+              ),
+            );
+          }
+        },
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child:

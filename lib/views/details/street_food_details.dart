@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hawklap/models/menu_item.dart';
+import 'package:hawklap/views/details/menu_item_details.dart';
 import '../../core/services/explore/map_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../components/rating/rating_widget.dart';
@@ -309,97 +311,110 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
   }
 
   Widget _buildMenuItemCard(MenuItem item, AppColorScheme colors) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.backgroundCard,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: Container(
-              width: 100,
-              height: 100,
-              color: colors.backgroundGreyInformation,
-              child:
-                  item.imageUrl != null
-                      ? Image.network(item.imageUrl!, fit: BoxFit.cover)
-                      : Center(
-                        child: Icon(Icons.fastfood, color: colors.textDisabled),
-                      ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MenuItemDetailsView(
+              item: item,
+              stallId: widget.streetFoodId,
             ),
           ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.name,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: colors.textPrimary,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: colors.backgroundCard,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Container(
+                width: 100,
+                height: 100,
+                color: colors.backgroundGreyInformation,
+                child:
+                    item.imageUrl != null
+                        ? Image.network(item.imageUrl!, fit: BoxFit.cover)
+                        : Center(
+                          child: Icon(Icons.fastfood, color: colors.textDisabled),
+                        ),
+              ),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                          ),
                         ),
                       ),
-                    ),
-                    Text(
-                      '${item.price.toStringAsFixed(2)}\$',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.brandPrimary,
+                      Text(
+                        '${item.price.toStringAsFixed(2)}\$',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.brandPrimary,
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.description ??
+                        'Delicious meal prepared with fresh ingredients.',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
+                  ),
+                  if (item.tags.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children:
+                          item.tags
+                              .map(
+                                (tag) => Text(
+                                  '#$tag',
+                                  style: const TextStyle(
+                                    color: AppColors.brandPrimary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              )
+                              .toList(),
                     ),
                   ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  item.description ??
-                      'Delicious meal prepared with fresh ingredients.',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                ),
-                if (item.tags.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    children:
-                        item.tags
-                            .map(
-                              (tag) => Text(
-                                '#$tag',
-                                style: const TextStyle(
-                                  color: AppColors.brandPrimary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                  ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

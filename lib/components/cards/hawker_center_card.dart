@@ -7,33 +7,38 @@ class HawkerCenterCard extends StatelessWidget {
   final HawkerCenter center;
   final AppColorScheme colors;
   final String? distanceText;
+  final VoidCallback? onTap;
 
   const HawkerCenterCard({
     super.key,
     required this.center,
     required this.colors,
     this.distanceText,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BaseInfoCard(
-      colors: colors,
-      imageChild: _buildImageChild(),
-      title: center.name,
-      subtitle:
-          distanceText != null
-              ? '${center.address} • $distanceText'
-              : center.address,
-      footer: Row(
-        children: [
-          Icon(Icons.map_outlined, size: 16, color: colors.textSecondary),
-          const SizedBox(width: 6),
-          Text(
-            'Tap to explore',
-            style: TextStyle(fontSize: 12, color: colors.textSecondary),
-          ),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: BaseInfoCard(
+        colors: colors,
+        imageChild: _buildImageChild(),
+        title: center.name,
+        subtitle:
+            distanceText != null
+                ? '${center.address} • $distanceText'
+                : center.address,
+        footer: Row(
+          children: [
+            Icon(Icons.map_outlined, size: 16, color: colors.textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              'Tap to explore',
+              style: TextStyle(fontSize: 12, color: colors.textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }

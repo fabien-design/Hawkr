@@ -1,6 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:hawklap/models/menu_item.dart';
 
 class HawkerCenter {
   final String id;
@@ -42,48 +43,6 @@ class HawkerCenter {
       description: json['description'],
       imageUrl: (json['image_url'] as String?)?.trim(),
       streetFoodCount: count,
-    );
-  }
-}
-
-class MenuItem {
-  final String id;
-  final String name;
-  final double price;
-  final String? description;
-  final String? imageUrl;
-  final String stallId;
-  final List<String> tags;
-
-  MenuItem({
-    required this.id,
-    required this.name,
-    required this.price,
-    this.description,
-    this.imageUrl,
-    required this.stallId,
-    this.tags = const [],
-  });
-
-  factory MenuItem.fromJson(Map<String, dynamic> json) {
-    List<String> tags = [];
-    if (json['menu_items_tags'] != null) {
-      final tagsList = json['menu_items_tags'] as List;
-      for (var tagMap in tagsList) {
-        if (tagMap['predefined_tags'] != null) {
-          tags.add(tagMap['predefined_tags']['name']);
-        }
-      }
-    }
-
-    return MenuItem(
-      id: json['id'],
-      name: json['name'],
-      price: (json['price'] as num).toDouble(),
-      description: json['description'],
-      imageUrl: (json['image_url'] as String?)?.trim(),
-      stallId: json['stall_id'],
-      tags: tags,
     );
   }
 }

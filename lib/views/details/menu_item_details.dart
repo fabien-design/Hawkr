@@ -3,37 +3,51 @@ import '../../core/theme/app_colors.dart';
 import '../../components/rating/rating_widget.dart';
 import '../../models/menu_item.dart';
 import '../../models/vote_count.dart';
+import '../../services/street_food_service.dart';
 import '../../services/vote_service.dart';
+import 'street_food_details.dart';
 
-class MenuItemDetails extends StatefulWidget {
+class MenuItemDetailsView extends StatefulWidget {
   final MenuItem item;
-  final String? stallName;
   final String stallId;
 
-  const MenuItemDetails({
+  const MenuItemDetailsView({
     super.key,
     required this.item,
-    this.stallName,
     required this.stallId,
   });
 
   @override
-  State<MenuItemDetails> createState() => _MenuItemDetailsState();
+  State<MenuItemDetailsView> createState() => _MenuItemDetailsViewState();
 }
 
-class _MenuItemDetailsState extends State<MenuItemDetails> {
+class _MenuItemDetailsViewState extends State<MenuItemDetailsView> {
   final _voteService = VoteService();
+  final _streetFoodService = StreetFoodService();
 
   // Single source of truth for vote state
   bool _isLiked = false;
   bool _isDisliked = false;
   int _upvotes = 0;
   int _downvotes = 0;
+  String? _stallName;
 
   @override
   void initState() {
     super.initState();
     _loadVoteData();
+    _loadStallName();
+  }
+
+  Future<void> _loadStallName() async {
+    try {
+      final stall = await _streetFoodService.getById(widget.stallId);
+      if (mounted && stall != null) {
+        setState(() {
+          _stallName = stall.name;
+        });
+      }
+    } catch (_) {}
   }
 
   /// Fetch fresh vote counts + user's own vote from the database.
@@ -198,6 +212,8 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
                   // Title
                   Text(
                     widget.item.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -207,33 +223,31 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
                   const SizedBox(height: 8),
 
                   // Clickable Stall name
-                  if (widget.stallName != null)
+                  if (_stallName != null)
                     GestureDetector(
                       onTap: () {
-                        // TODO: Navigate to stall details page
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (context) => StallDetails(stallId: widget.stallId),
-                        //   ),
-                        // );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Navigating to ${widget.stallName} (Not implemented yet)'),
-                            duration: const Duration(seconds: 2),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StreetFoodDetailView(
+                              streetFoodId: widget.stallId,
+                            ),
                           ),
                         );
                       },
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'From: ${widget.stallName!}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.brandPrimary,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
+                          Flexible(
+                            child: Text(
+                              'From: $_stallName',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppColors.brandPrimary,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 4),

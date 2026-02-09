@@ -13,6 +13,7 @@ class StreetFoodCard extends StatelessWidget {
   final String? distanceText;
   final bool showSponsoredBadge;
   final bool showBangerBadge;
+  final VoidCallback? onTap;
 
   const StreetFoodCard({
     super.key,
@@ -22,23 +23,27 @@ class StreetFoodCard extends StatelessWidget {
     this.distanceText,
     this.showSponsoredBadge = false,
     this.showBangerBadge = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BaseInfoCard(
-      colors: colors,
-      imageChild: _buildImageChild(),
-      title: food.name,
-      subtitle:
-          distanceText != null
-              ? '${food.description ?? 'Street Food'} • $distanceText'
-              : food.description ?? 'Street Food',
-      footer: VoteScoreChip(
-        upvotes: voteCount.upvotes,
-        downvotes: voteCount.downvotes,
-        upvoteColor: colors.actionUpvote,
-        downvoteColor: colors.actionDownvote,
+    return GestureDetector(
+      onTap: onTap,
+      child: BaseInfoCard(
+        colors: colors,
+        imageChild: _buildImageChild(),
+        title: food.name,
+        subtitle:
+            distanceText != null
+                ? '${food.description ?? 'Street Food'} • $distanceText'
+                : food.description ?? 'Street Food',
+        footer: VoteScoreChip(
+          upvotes: voteCount.upvotes,
+          downvotes: voteCount.downvotes,
+          upvoteColor: colors.actionUpvote,
+          downvoteColor: colors.actionDownvote,
+        ),
       ),
     );
   }
