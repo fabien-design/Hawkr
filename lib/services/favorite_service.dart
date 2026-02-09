@@ -88,4 +88,38 @@ class FavoriteService {
         .eq('user_id', user.id)
         .eq('menu_item_id', menuItemId);
   }
+
+  Future<bool> isMenuItemFavorite(String menuItemId) async {
+    final user = currentUser;
+    if (user == null) return false;
+
+    final response = await _supabase
+        .from('user_favorite_menu_items')
+        .select()
+        .eq('user_id', user.id)
+        .eq('menu_item_id', menuItemId)
+        .maybeSingle();
+
+    return response != null;
+  }
+
+  Future<void> toggleMenuItemFavorite(String menuItemId) async {
+    final user = currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final isFavorite = await isMenuItemFavorite(menuItemId);
+
+    if (isFavorite) {
+      await _supabase
+          .from('user_favorite_menu_items')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('menu_item_id', menuItemId);
+    } else {
+      await _supabase.from('user_favorite_menu_items').insert({
+        'user_id': user.id,
+        'menu_item_id': menuItemId,
+      });
+    }
+  }
 }

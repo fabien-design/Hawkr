@@ -3,6 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../components/rating/rating_widget.dart';
 import '../../models/menu_item.dart';
 import '../../models/vote_count.dart';
+import '../../services/favorite_service.dart';
 import '../../services/street_food_service.dart';
 import '../../services/vote_service.dart';
 import 'street_food_details.dart';
@@ -24,6 +25,7 @@ class MenuItemDetailsView extends StatefulWidget {
 class _MenuItemDetailsViewState extends State<MenuItemDetailsView> {
   final _voteService = VoteService();
   final _streetFoodService = StreetFoodService();
+  final _favoriteService = FavoriteService();
 
   // Single source of truth for vote state
   bool _isLiked = false;
@@ -31,12 +33,14 @@ class _MenuItemDetailsViewState extends State<MenuItemDetailsView> {
   int _upvotes = 0;
   int _downvotes = 0;
   String? _stallName;
+  bool _isFavorite = false;
 
   @override
   void initState() {
     super.initState();
     _loadVoteData();
     _loadStallName();
+    _loadFavoriteStatus();
   }
 
   Future<void> _loadStallName() async {
@@ -48,6 +52,36 @@ class _MenuItemDetailsViewState extends State<MenuItemDetailsView> {
         });
       }
     } catch (_) {}
+  }
+
+  Future<void> _loadFavoriteStatus() async {
+    if (widget.item.id == null) return;
+    try {
+      final isFav = await _favoriteService.isMenuItemFavorite(widget.item.id!);
+      if (mounted) {
+        setState(() {
+          _isFavorite = isFav;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (widget.item.id == null) return;
+    try {
+      await _favoriteService.toggleMenuItemFavorite(widget.item.id!);
+      if (mounted) {
+        setState(() {
+          _isFavorite = !_isFavorite;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating favorite: $e')),
+        );
+      }
+    }
   }
 
   /// Fetch fresh vote counts + user's own vote from the database.
@@ -174,24 +208,27 @@ class _MenuItemDetailsViewState extends State<MenuItemDetailsView> {
                       const Spacer(flex: 2),
 
                       // Favorite button
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: colors.backgroundCard,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.favorite_border,
-                          size: 20,
-                          color: colors.actionFavorite,
+                      GestureDetector(
+                        onTap: _toggleFavorite,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: colors.backgroundCard,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _isFavorite ? Icons.favorite : Icons.favorite_border,
+                            size: 20,
+                            color: _isFavorite ? Colors.red : colors.actionFavorite,
+                          ),
                         ),
                       ),
                     ],
