@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
+import 'package:hawklap/models/hawker_center.dart';
+import 'package:hawklap/models/menu_item.dart';
+import 'package:hawklap/models/street_food.dart';
+import 'package:hawklap/models/vote_count.dart';
+import 'package:hawklap/services/hawker_center_service.dart';
+import 'package:hawklap/services/location_service.dart';
+import 'package:hawklap/services/menu_item_service.dart';
+import 'package:hawklap/services/street_food_service.dart';
+import 'package:hawklap/services/vote_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchView extends StatefulWidget {
@@ -12,138 +22,42 @@ class SearchView extends StatefulWidget {
 
 class _SearchViewState extends State<SearchView> {
   final TextEditingController _searchController = TextEditingController();
+  final _hawkerCenterService = HawkerCenterService();
+  final _streetFoodService = StreetFoodService();
+  final _menuItemService = MenuItemService();
+  final _locationService = LocationService();
+  final _voteService = VoteService();
+
   List<String> _recentlyViewedIds = [];
-
-  final List<SearchHawkerCenter> _hawkerCenters = const [
-    SearchHawkerCenter(
-      id: 'hc_1',
-      name: 'Maxwell Food Centre',
-      location: 'Chinatown',
-      imageUrl: null,
-    ),
-    SearchHawkerCenter(
-      id: 'hc_2',
-      name: 'Tekka Centre',
-      location: 'Little India',
-      imageUrl: null,
-    ),
-    SearchHawkerCenter(
-      id: 'hc_3',
-      name: 'Old Airport Road',
-      location: 'Kallang',
-      imageUrl: null,
-    ),
-  ];
-
-  final List<SearchMenuItem> _menuItems = const [
-    SearchMenuItem(
-      id: 'mi_1',
-      name: 'Chili Crab Noodles',
-      price: 8.5,
-      stallName: 'Ocean Wok',
-      imageUrl: null,
-    ),
-    SearchMenuItem(
-      id: 'mi_2',
-      name: 'Char Kway Teow',
-      price: 6.0,
-      stallName: 'Wok Master',
-      imageUrl: null,
-    ),
-    SearchMenuItem(
-      id: 'mi_3',
-      name: 'Hainanese Chicken Rice',
-      price: 5.5,
-      stallName: 'Golden Rice',
-      imageUrl: null,
-    ),
-  ];
-
-  final List<SearchStreetFood> _streetFoods = const [
-    SearchStreetFood(
-      id: 'sf_1',
-      name: 'Satay Skewers',
-      cuisine: 'Malay',
-      imageUrl: null,
-      upvotes: 482,
-      downvotes: 31,
-      isOpen: true,
-      isVeggie: false,
-      isHalal: true,
-      hawkerCenter: 'Lau Pa Sat',
-      isSponsored: false,
-    ),
-    SearchStreetFood(
-      id: 'sf_2',
-      name: 'Laksa Lemak',
-      cuisine: 'Peranakan',
-      imageUrl: null,
-      upvotes: 612,
-      downvotes: 44,
-      isOpen: false,
-      isVeggie: false,
-      isHalal: false,
-      hawkerCenter: 'Katong',
-      isSponsored: true,
-    ),
-    SearchStreetFood(
-      id: 'sf_3',
-      name: 'Veggie Dumplings',
-      cuisine: 'Chinese',
-      imageUrl: null,
-      upvotes: 219,
-      downvotes: 18,
-      isOpen: true,
-      isVeggie: true,
-      isHalal: false,
-      hawkerCenter: 'Chinatown Complex',
-      isSponsored: false,
-    ),
-    SearchStreetFood(
-      id: 'sf_4',
-      name: 'Roti Prata',
-      cuisine: 'Indian',
-      imageUrl: null,
-      upvotes: 734,
-      downvotes: 52,
-      isOpen: true,
-      isVeggie: true,
-      isHalal: true,
-      hawkerCenter: 'Tekka Centre',
-      isSponsored: false,
-    ),
-    SearchStreetFood(
-      id: 'sf_5',
-      name: 'Nasi Lemak',
-      cuisine: 'Malay',
-      imageUrl: null,
-      upvotes: 501,
-      downvotes: 23,
-      isOpen: false,
-      isVeggie: false,
-      isHalal: true,
-      hawkerCenter: 'Geylang Serai',
-      isSponsored: true,
-    ),
-    SearchStreetFood(
-      id: 'sf_6',
-      name: 'Tofu Salad Bowl',
-      cuisine: 'Fusion',
-      imageUrl: null,
-      upvotes: 188,
-      downvotes: 12,
-      isOpen: true,
-      isVeggie: true,
-      isHalal: false,
-      hawkerCenter: 'Tiong Bahru',
-      isSponsored: false,
-    ),
-  ];
+  List<HawkerCenter> _hawkerCenters = [];
+  List<StreetFood> _streetFoods = [];
+  List<MenuItem> _menuItems = [];
+  Map<String, String> _stallNames = {};
+  Map<String, VoteCount> _menuItemVotes = {};
+  Map<String, VoteCount> _streetFoodVotes = {};
+  Position? _userPosition;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadRecentlyViewed();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await Future.wait([
+      _loadRecentlyViewed(),
+      _loadUserLocation(),
+      _loadHawkerCenters(),
+      _loadStreetFoods(),
+      _loadMenuItems(),
+    ]);
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadRecentlyViewed() async {
@@ -153,6 +67,78 @@ class _SearchViewState extends State<SearchView> {
       setState(() {
         _recentlyViewedIds = ids;
       });
+    }
+  }
+
+  Future<void> _loadUserLocation() async {
+    final position = await _locationService.getCurrentLocation();
+    if (mounted) {
+      setState(() {
+        _userPosition = position;
+      });
+    }
+  }
+
+  Future<void> _loadHawkerCenters() async {
+    try {
+      final centers = await _hawkerCenterService.getAll();
+      if (mounted) {
+        setState(() {
+          _hawkerCenters = centers;
+        });
+      }
+    } catch (e) {
+      // Handle error silently for now
+    }
+  }
+
+  Future<void> _loadStreetFoods() async {
+    try {
+      final foods = await _streetFoodService.getAll();
+      
+      // Fetch vote counts for street foods
+      final foodIds = foods.map((food) => food.id!).toList();
+      final votes = await _voteService.getStreetFoodVotesBatch(foodIds);
+      
+      if (mounted) {
+        setState(() {
+          _streetFoods = foods;
+          _streetFoodVotes = votes;
+        });
+      }
+    } catch (e) {
+      // Handle error silently for now
+    }
+  }
+
+  Future<void> _loadMenuItems() async {
+    try {
+      final items = await _menuItemService.getAll();
+      
+      // Fetch stall names for each menu item
+      final stallIds = items.map((item) => item.stallId).toSet().toList();
+      final Map<String, String> stallNames = {};
+      
+      for (final stallId in stallIds) {
+        final stall = await _streetFoodService.getById(stallId);
+        if (stall != null) {
+          stallNames[stallId] = stall.name;
+        }
+      }
+
+      // Fetch vote counts for menu items
+      final itemIds = items.map((item) => item.id!).toList();
+      final votes = await _voteService.getMenuItemVotesBatch(itemIds);
+
+      if (mounted) {
+        setState(() {
+          _menuItems = items;
+          _stallNames = stallNames;
+          _menuItemVotes = votes;
+        });
+      }
+    } catch (e) {
+      // Handle error silently for now
     }
   }
 
@@ -167,6 +153,14 @@ class _SearchViewState extends State<SearchView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = isDark ? AppColors.dark : AppColors.light;
 
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: colors.backgroundApp,
+        appBar: const CustomAppBar(title: 'Search'),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: colors.backgroundApp,
       appBar: const CustomAppBar(title: 'Search'),
@@ -175,15 +169,46 @@ class _SearchViewState extends State<SearchView> {
   }
 
   Widget _buildSearchPage(BuildContext context, AppColorScheme colors) {
+    // Dummy data for filters until backend is ready
     final recentlyViewed = _streetFoods
         .where((food) => _recentlyViewedIds.contains(food.id))
         .toList();
-    final veggie = _streetFoods.where((food) => food.isVeggie).toList();
-    final halal = _streetFoods.where((food) => food.isHalal).toList();
-    final nearby = _streetFoods.take(4).toList();
-    final featured = _streetFoods.where((food) => food.isSponsored).toList();
-    final topBangers = [..._streetFoods]
-      ..sort((a, b) => b.upvoteRatio.compareTo(a.upvoteRatio));
+    
+    // Featured (sponsored) - using dummy flag for now
+    final featured = _streetFoods.take(2).toList(); // First 2 as featured
+    
+    // Veggie - dummy data for now
+    final veggie = _streetFoods.take(3).toList();
+    
+    // Halal - dummy data for now
+    final halal = _streetFoods.skip(1).take(3).toList();
+    
+    // Nearby - sort by distance if we have user location
+    List<StreetFood> nearby = [];
+    if (_userPosition != null) {
+      nearby = [..._streetFoods]
+        ..sort((a, b) {
+          final distA = _locationService.calculateDistance(
+            _userPosition!.latitude,
+            _userPosition!.longitude,
+            a.latitude,
+            a.longitude,
+          );
+          final distB = _locationService.calculateDistance(
+            _userPosition!.latitude,
+            _userPosition!.longitude,
+            b.latitude,
+            b.longitude,
+          );
+          return distA.compareTo(distB);
+        });
+      nearby = nearby.take(4).toList();
+    } else {
+      nearby = _streetFoods.take(4).toList();
+    }
+    
+    // Top Bangers - for now just take first few until votes are implemented
+    final topBangers = _streetFoods.take(5).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
@@ -198,7 +223,7 @@ class _SearchViewState extends State<SearchView> {
               subtitle: 'Boosted by merchants',
               colors: colors,
             ),
-            _buildCarousel<SearchStreetFood>(
+            _buildCarousel<StreetFood>(
               height: 240,
               items: featured,
               colors: colors,
@@ -216,7 +241,7 @@ class _SearchViewState extends State<SearchView> {
               subtitle: 'Jump back in quickly',
               colors: colors,
             ),
-            _buildCarousel<SearchStreetFood>(
+            _buildCarousel<StreetFood>(
               height: 240,
               items: recentlyViewed,
               colors: colors,
@@ -233,7 +258,7 @@ class _SearchViewState extends State<SearchView> {
               subtitle: 'Highest community upvote ratio',
               colors: colors,
             ),
-            _buildCarousel<SearchStreetFood>(
+            _buildCarousel<StreetFood>(
               height: 240,
               items: topBangers,
               colors: colors,
@@ -251,7 +276,7 @@ class _SearchViewState extends State<SearchView> {
               subtitle: 'Hawker centres around you',
               colors: colors,
             ),
-            _buildCarousel<SearchStreetFood>(
+            _buildCarousel<StreetFood>(
               height: 240,
               items: nearby,
               colors: colors,
@@ -266,7 +291,7 @@ class _SearchViewState extends State<SearchView> {
               subtitle: 'Plant-based favourites',
               colors: colors,
             ),
-            _buildCarousel<SearchStreetFood>(
+            _buildCarousel<StreetFood>(
               height: 240,
               items: veggie,
               colors: colors,
@@ -281,7 +306,7 @@ class _SearchViewState extends State<SearchView> {
               subtitle: 'Halal-certified picks',
               colors: colors,
             ),
-            _buildCarousel<SearchStreetFood>(
+            _buildCarousel<StreetFood>(
               height: 240,
               items: halal,
               colors: colors,
@@ -296,7 +321,7 @@ class _SearchViewState extends State<SearchView> {
               subtitle: 'Discover the best local hubs',
               colors: colors,
             ),
-            _buildCarousel<SearchHawkerCenter>(
+            _buildCarousel<HawkerCenter>(
               height: 240,
               items: _hawkerCenters,
               colors: colors,
@@ -313,7 +338,7 @@ class _SearchViewState extends State<SearchView> {
               subtitle: 'Trending dishes near you',
               colors: colors,
             ),
-            _buildCarousel<SearchMenuItem>(
+            _buildCarousel<MenuItem>(
               height: 240,
               items: _menuItems,
               colors: colors,
@@ -426,86 +451,160 @@ class _SearchViewState extends State<SearchView> {
   }
 
   Widget _buildStreetFoodCard(
-    SearchStreetFood food,
+    StreetFood food,
     AppColorScheme colors, {
     bool showSponsoredBadge = false,
     bool showBangerBadge = false,
   }) {
+    // Calculate distance if we have user position
+    String? distanceText;
+    if (_userPosition != null) {
+      final distance = _locationService.calculateDistance(
+        _userPosition!.latitude,
+        _userPosition!.longitude,
+        food.latitude,
+        food.longitude,
+      );
+      distanceText = _locationService.formatDistance(distance);
+    }
+
+    // Get real vote counts
+    final voteCount = _streetFoodVotes[food.id] ?? VoteCount(upvotes: 0, downvotes: 0);
+
     return _buildBaseCard(
       colors: colors,
-      imageChild: Container(
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(22),
-          ),
-          gradient: LinearGradient(
-            colors: [
-              AppColors.brandPrimary.withValues(alpha: 0.8),
-              AppColors.brandSecondary.withValues(alpha: 0.7),
-            ],
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Center(
-              child: Icon(
-                Icons.restaurant_menu,
-                size: 42,
-                color: Colors.white,
-              ),
-            ),
-            Positioned(
-              top: 12,
-              left: 12,
-              child: Row(
-                children: [
-                  _buildStatusPill(
-                    food.isOpen ? 'Open' : 'Closed',
-                    food.isOpen ? colors.statusOpen : colors.statusClosed,
-                    colors.textInverse,
+      imageChild: food.imageUrl != null && food.imageUrl!.isNotEmpty
+          ? Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(22),
                   ),
-                  if (showSponsoredBadge || food.isSponsored) ...[
-                    const SizedBox(width: 6),
-                    _buildStatusPill(
-                      'Sponsored',
-                      colors.statusSponsored,
-                      colors.textInverse,
+                  child: Image.network(
+                    food.imageUrl!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(22),
+                          ),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.brandPrimary.withValues(alpha: 0.8),
+                              AppColors.brandSecondary.withValues(alpha: 0.7),
+                            ],
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.restaurant_menu,
+                            size: 42,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (showSponsoredBadge || showBangerBadge)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Row(
+                      children: [
+                        if (showSponsoredBadge) ...[
+                          _buildStatusPill(
+                            'Sponsored',
+                            colors.statusSponsored,
+                            colors.textInverse,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        if (showBangerBadge) ...[
+                          _buildStatusPill(
+                            'Banger',
+                            colors.actionUpvote,
+                            colors.textInverse,
+                          ),
+                        ],
+                      ],
                     ),
+                  ),
+              ],
+            )
+          : Container(
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(22),
+                ),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.brandPrimary.withValues(alpha: 0.8),
+                    AppColors.brandSecondary.withValues(alpha: 0.7),
                   ],
-                  if (showBangerBadge) ...[
-                    const SizedBox(width: 6),
-                    _buildStatusPill(
-                      'Banger',
-                      colors.actionUpvote,
-                      colors.textInverse,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  const Center(
+                    child: Icon(
+                      Icons.restaurant_menu,
+                      size: 42,
+                      color: Colors.white,
                     ),
-                  ],
+                  ),
+                  if (showSponsoredBadge || showBangerBadge)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Row(
+                        children: [
+                          if (showSponsoredBadge) ...[
+                            _buildStatusPill(
+                              'Sponsored',
+                              colors.statusSponsored,
+                              colors.textInverse,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          if (showBangerBadge) ...[
+                            _buildStatusPill(
+                              'Banger',
+                              colors.actionUpvote,
+                              colors.textInverse,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
       title: food.name,
-      subtitle: '${food.cuisine} • ${food.hawkerCenter}',
+      subtitle: distanceText != null
+          ? '${food.description ?? 'Street Food'} • $distanceText'
+          : food.description ?? 'Street Food',
       footer: Row(
         children: [
           _buildScoreChip(
-            food.upvotes,
-            food.downvotes,
+            voteCount.upvotes,
+            voteCount.downvotes,
             colors.actionUpvote,
             colors.actionDownvote,
           ),
           const SizedBox(width: 10),
           _buildVoteIndicator(
             Icons.thumb_up_outlined,
-            food.upvotes,
+            voteCount.upvotes,
             colors.actionUpvote,
           ),
           const SizedBox(width: 8),
           _buildVoteIndicator(
             Icons.thumb_down_outlined,
-            food.downvotes,
+            voteCount.downvotes,
             colors.actionDownvote,
           ),
         ],
@@ -514,20 +613,55 @@ class _SearchViewState extends State<SearchView> {
   }
 
   Widget _buildHawkerCenterCard(
-    SearchHawkerCenter center,
+    HawkerCenter center,
     AppColorScheme colors,
   ) {
+    // Calculate distance if we have user position
+    String? distanceText;
+    if (_userPosition != null) {
+      final distance = _locationService.calculateDistance(
+        _userPosition!.latitude,
+        _userPosition!.longitude,
+        center.latitude,
+        center.longitude,
+      );
+      distanceText = _locationService.formatDistance(distance);
+    }
+
     return _buildBaseCard(
       colors: colors,
-      imageChild: Center(
-        child: Icon(
-          Icons.location_city,
-          color: colors.textSecondary,
-          size: 42,
-        ),
-      ),
+      imageChild: center.imageUrl != null && center.imageUrl!.isNotEmpty
+          ? ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
+              child: Image.network(
+                center.imageUrl!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Icon(
+                      Icons.location_city,
+                      color: colors.textSecondary,
+                      size: 42,
+                    ),
+                  );
+                },
+              ),
+            )
+          : Center(
+              child: Icon(
+                Icons.location_city,
+                color: colors.textSecondary,
+                size: 42,
+              ),
+            ),
       title: center.name,
-      subtitle: center.location,
+      subtitle: distanceText != null
+          ? '${center.address} • $distanceText'
+          : center.address,
       footer: Row(
         children: [
           Icon(
@@ -545,24 +679,61 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
-  Widget _buildMenuItemCard(SearchMenuItem item, AppColorScheme colors) {
+  Widget _buildMenuItemCard(MenuItem item, AppColorScheme colors) {
+    final stallName = _stallNames[item.stallId] ?? 'Unknown Stall';
+    final voteCount = _menuItemVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0);
+
     return _buildBaseCard(
       colors: colors,
-      imageChild: Center(
-        child: Icon(
-          Icons.ramen_dining,
-          color: colors.textSecondary,
-          size: 36,
-        ),
-      ),
+      imageChild: item.imageUrl != null && item.imageUrl!.isNotEmpty
+          ? ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
+              child: Image.network(
+                item.imageUrl!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Icon(
+                      Icons.ramen_dining,
+                      color: colors.textSecondary,
+                      size: 36,
+                    ),
+                  );
+                },
+              ),
+            )
+          : Center(
+              child: Icon(
+                Icons.ramen_dining,
+                color: colors.textSecondary,
+                size: 36,
+              ),
+            ),
       title: item.name,
-      subtitle: item.stallName,
-      footer: Text(
-        '\$${item.price.toStringAsFixed(2)}',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: AppColors.brandPrimary,
-        ),
+      subtitle: stallName,
+      footer: Row(
+        children: [
+          Text(
+            '\$${item.price.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: AppColors.brandPrimary,
+            ),
+          ),
+          if (voteCount.total > 0) ...[
+            const SizedBox(width: 10),
+            _buildScoreChip(
+              voteCount.upvotes,
+              voteCount.downvotes,
+              colors.actionUpvote,
+              colors.actionDownvote,
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -688,70 +859,6 @@ class _SearchViewState extends State<SearchView> {
   }
 }
 
-class SearchStreetFood {
-  final String id;
-  final String name;
-  final String cuisine;
-  final String? imageUrl;
-  final int upvotes;
-  final int downvotes;
-  final bool isOpen;
-  final bool isVeggie;
-  final bool isHalal;
-  final String hawkerCenter;
-  final bool isSponsored;
-
-  const SearchStreetFood({
-    required this.id,
-    required this.name,
-    required this.cuisine,
-    required this.imageUrl,
-    required this.upvotes,
-    required this.downvotes,
-    required this.isOpen,
-    required this.isVeggie,
-    required this.isHalal,
-    required this.hawkerCenter,
-    required this.isSponsored,
-  });
-
-  double get upvoteRatio {
-    final total = upvotes + downvotes;
-    if (total == 0) return 0;
-    return upvotes / total;
-  }
-}
-
-class SearchHawkerCenter {
-  final String id;
-  final String name;
-  final String location;
-  final String? imageUrl;
-
-  const SearchHawkerCenter({
-    required this.id,
-    required this.name,
-    required this.location,
-    required this.imageUrl,
-  });
-}
-
-class SearchMenuItem {
-  final String id;
-  final String name;
-  final double price;
-  final String stallName;
-  final String? imageUrl;
-
-  const SearchMenuItem({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.stallName,
-    required this.imageUrl,
-  });
-}
-
 class _StretchScrollBehavior extends ScrollBehavior {
   const _StretchScrollBehavior();
 
@@ -763,8 +870,8 @@ class _StretchScrollBehavior extends ScrollBehavior {
   ) {
     return StretchingOverscrollIndicator(
       axisDirection: details.direction,
-      clipBehavior: Clip.none,
       child: child,
+      clipBehavior: Clip.none,
     );
   }
 }
