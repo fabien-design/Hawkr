@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
 
 class FilterMenu extends StatefulWidget {
   final double initialRadius;
@@ -25,34 +26,44 @@ class _FilterMenuState extends State<FilterMenu> {
 
   @override
   Widget build(BuildContext context) {
-    const Color hawkColor = Color(0xFFF26A2E);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = isDark ? AppColors.dark : AppColors.light;
+    const Color hawkColor = AppColors.brandPrimary;
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: colors.backgroundSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Center(
+          Center(
             child: Text(
               'Filters',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
             ),
           ),
           const SizedBox(height: 30),
           Text(
             'Search Radius: ${_currentRadius.toStringAsFixed(1)} km',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: colors.textPrimary,
+            ),
           ),
           Slider(
             value: _currentRadius,
             min: 0.5,
             max: 10.0,
-            divisions: 19, // (10 - 0.5) / 0.5 = 19 divisions for 0.5 steps
+            divisions: 19,
             activeColor: hawkColor,
             inactiveColor: hawkColor.withOpacity(0.2),
             label: '${_currentRadius.toStringAsFixed(1)} km',
