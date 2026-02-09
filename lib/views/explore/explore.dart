@@ -26,6 +26,8 @@ class _ExploreViewState extends State<ExploreView> {
   bool _isLoading = true;
   String? _errorMessage;
   double _searchRadius = 1.0; // In km
+  RangeValues _priceRange = const RangeValues(0, 50);
+  double? _minRating;
   double _currentZoom = 14.0;
   final double _streetFoodZoomThreshold = 16.5;
 
@@ -100,17 +102,221 @@ class _ExploreViewState extends State<ExploreView> {
   void _openFilterMenu() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // Allow larger height
       backgroundColor: Colors.transparent,
       builder: (context) {
         return FilterMenu(
           initialRadius: _searchRadius,
-          onRadiusChanged: (newRadius) {
+          initialPriceRange: _priceRange,
+          initialRating: _minRating,
+          onApply: (newRadius, newPriceRange, newRating) {
+            Navigator.pop(context);
+            setState(() {
+              _searchRadius = newRadius;
+              _priceRange = newPriceRange;
+              _minRating = newRating;
+            });
             if (_currentPosition != null) {
               _fetchHawkerCenters(_currentPosition!, newRadius);
             }
+            _showFilteredMenuItems();
           },
         );
       },
+    );
+  }
+
+  void _showFilteredMenuItems() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = isDark ? AppColors.dark : AppColors.light;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (_, controller) {
+            return Container(
+              decoration: BoxDecoration(
+                color: colors.backgroundSurface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: colors.textSecondary.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2.5),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    _minRating != null
+                        ? 'Recommended Dishes (\\\$${_priceRange.start.round()} - \\\$${_priceRange.end.round()}, +${_minRating!.toInt()}%)'
+                        : 'Recommended Dishes (\\\$${_priceRange.start.round()} - \\\$${_priceRange.end.round()})',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: _buildFilteredMenuContent(controller, colors),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFilteredMenuContent(
+    ScrollController controller,
+    AppColorScheme colors,
+  ) {
+    return FutureBuilder<List<MenuItem>>(
+      future: _fetchAllMenuItemsInArea(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        final items =
+            snapshot.data!.where((item) {
+              final priceOk =
+                  item.price >= _priceRange.start &&
+                  item.price <= _priceRange.end;
+              final ratingOk =
+                  _minRating == null || item.positivePercentage >= _minRating!;
+              return priceOk && ratingOk;
+            }).toList();
+
+        if (items.isEmpty) {
+          return Center(
+            child: Text(
+              'No dishes found matching your filters.',
+              style: TextStyle(color: colors.textSecondary),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          controller: controller,
+          padding: const EdgeInsets.all(16),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return _buildMenuItemCard(item, colors);
+          },
+        );
+      },
+    );
+  }
+
+  Future<List<MenuItem>> _fetchAllMenuItemsInArea() async {
+    List<MenuItem> allItems = [];
+    for (var center in _nearbyHawkerCenters) {
+      final stalls = await _mapService.getStreetFoodsByHawkerCenter(center.id);
+      for (var stall in stalls) {
+        allItems.addAll(stall.menuItems);
+      }
+    }
+    return allItems;
+  }
+
+  Widget _buildMenuItemCard(MenuItem item, AppColorScheme colors) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: colors.backgroundCard,
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(10),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child:
+              item.imageUrl != null
+                  ? Image.network(
+                    item.imageUrl!,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  )
+                  : Container(
+                    width: 60,
+                    height: 60,
+                    color: colors.backgroundGreyInformation,
+                    child: Icon(Icons.fastfood, color: colors.textSecondary),
+                  ),
+        ),
+        title: Text(
+          item.name,
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.description ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '\\\$${item.price.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: AppColors.brandPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (item.upvotes + item.downvotes > 0)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.thumb_up,
+                        size: 14,
+                        color: colors.actionUpvote,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${item.positivePercentage.toInt()}%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+        onTap: () {
+          _showStreetFoodDetails(item.stallId);
+        },
+      ),
     );
   }
 
