@@ -86,6 +86,11 @@ class _MainNavbarState extends State<MainNavbar> {
       }
     } else {
       setState(() {
+        // Refresh Favourites tab when switching to it
+        if (index == 2) {
+          _tabKeys[2] = UniqueKey();
+          _navigatorKeys[2] = GlobalKey<NavigatorState>();
+        }
         _currentIndex = index;
       });
     }

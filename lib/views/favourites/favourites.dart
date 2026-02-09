@@ -245,15 +245,16 @@ class _FavouritesViewState extends State<FavouritesView> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colors.backgroundCard,
       child: ListTile(
-        onTap: () {
+        onTap: () async {
           if (hc.id != null) {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder:
                     (context) => HawkerCenterDetailView(hawkerCenterId: hc.id!),
               ),
             );
+            _loadFavorites();
           }
         },
         leading: ClipRRect(
@@ -296,15 +297,16 @@ class _FavouritesViewState extends State<FavouritesView> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colors.backgroundCard,
       child: ListTile(
-        onTap: () {
+        onTap: () async {
           if (sf.id != null) {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder:
                     (context) => StreetFoodDetailView(streetFoodId: sf.id!),
               ),
             );
+            _loadFavorites();
           }
         },
         leading: ClipRRect(
@@ -347,15 +349,16 @@ class _FavouritesViewState extends State<FavouritesView> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colors.backgroundCard,
       child: ListTile(
-        onTap: () {
+        onTap: () async {
           if (mi.id != null) {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder:
-                    (context) => MenuItemDetailsView(stallId: mi.id!, item: mi),
+                    (context) => MenuItemDetailsView(stallId: mi.stallId, item: mi),
               ),
             );
+            _loadFavorites();
           }
         },
         leading: ClipRRect(
