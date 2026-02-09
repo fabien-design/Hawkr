@@ -20,6 +20,13 @@ class HawkerCenterService {
     return response != null ? HawkerCenter.fromJson(response) : null;
   }
 
+  Future<HawkerCenter> getHawkerCenterDetails(String id) async {
+    final response =
+        await _supabase.from(_table).select().eq('id', id).single();
+
+    return HawkerCenter.fromJson(response);
+  }
+
   Future<HawkerCenter> create(HawkerCenter hawkerCenter) async {
     final response =
         await _supabase
