@@ -6,7 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../core/services/explore/map_service.dart';
 import '../../core/theme/app_colors.dart';
 import 'stalls/stall_list.dart';
-import 'stalls/street_food_detail.dart';
+import '../details/street_food_details.dart';
 import 'filter/filters.dart';
 import 'hawker_center_panel.dart';
 
