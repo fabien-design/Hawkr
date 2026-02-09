@@ -6,10 +6,7 @@ class HawkerCenterService {
   static const _table = 'hawker_centers';
 
   Future<List<HawkerCenter>> getAll() async {
-    final response = await _supabase
-        .from(_table)
-        .select()
-        .order('name');
+    final response = await _supabase.from(_table).select().order('name');
 
     return (response as List)
         .map((json) => HawkerCenter.fromJson(json))
@@ -17,41 +14,43 @@ class HawkerCenterService {
   }
 
   Future<HawkerCenter?> getById(String id) async {
-    final response = await _supabase
-        .from(_table)
-        .select()
-        .eq('id', id)
-        .maybeSingle();
+    final response =
+        await _supabase.from(_table).select().eq('id', id).maybeSingle();
 
-    if (response == null) return null;
+    return response != null ? HawkerCenter.fromJson(response) : null;
+  }
+
+  Future<HawkerCenter> getHawkerCenterDetails(String id) async {
+    final response =
+        await _supabase.from(_table).select().eq('id', id).single();
+
     return HawkerCenter.fromJson(response);
   }
 
   Future<HawkerCenter> create(HawkerCenter hawkerCenter) async {
-    final response = await _supabase
-        .from(_table)
-        .insert(hawkerCenter.toJson())
-        .select()
-        .single();
+    final response =
+        await _supabase
+            .from(_table)
+            .insert(hawkerCenter.toJson())
+            .select()
+            .single();
 
     return HawkerCenter.fromJson(response);
   }
 
   Future<HawkerCenter> update(String id, HawkerCenter hawkerCenter) async {
-    final response = await _supabase
-        .from(_table)
-        .update(hawkerCenter.toJson())
-        .eq('id', id)
-        .select()
-        .single();
+    final response =
+        await _supabase
+            .from(_table)
+            .update(hawkerCenter.toJson())
+            .eq('id', id)
+            .select()
+            .single();
 
     return HawkerCenter.fromJson(response);
   }
 
   Future<void> delete(String id) async {
-    await _supabase
-        .from(_table)
-        .delete()
-        .eq('id', id);
+    await _supabase.from(_table).delete().eq('id', id);
   }
 }

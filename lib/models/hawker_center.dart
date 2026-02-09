@@ -5,6 +5,7 @@ class HawkerCenter {
   final double longitude;
   final double latitude;
   final String? description;
+  final String? imageUrl;
   final DateTime? createdAt;
 
   HawkerCenter({
@@ -14,6 +15,7 @@ class HawkerCenter {
     required this.longitude,
     required this.latitude,
     this.description,
+    this.imageUrl,
     this.createdAt,
   });
 
@@ -25,9 +27,11 @@ class HawkerCenter {
       longitude: (json['longitude'] as num).toDouble(),
       latitude: (json['latitude'] as num).toDouble(),
       description: json['description'] as String?,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      imageUrl: json['image_url'] as String?,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : null,
     );
   }
 
@@ -39,6 +43,7 @@ class HawkerCenter {
       'longitude': longitude,
       'latitude': latitude,
       if (description != null) 'description': description,
+      if (imageUrl != null) 'image_url': imageUrl,
     };
   }
 }

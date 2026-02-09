@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hawklap/components/app_bar/custom_app_bar.dart';
+import 'package:hawklap/components/image_picker/image_picker_field.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/viewmodels/add_menu_item_viewmodel.dart';
 
@@ -9,7 +11,7 @@ class AddMenuItemView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AddMenuItemViewModel()..loadStalls(),
+      create: (_) => AddMenuItemViewModel()..loadHawkerCenters(),
       child: const _AddMenuItemContent(),
     );
   }
@@ -51,11 +53,7 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
 
     return Scaffold(
       backgroundColor: colors.backgroundApp,
-      appBar: AppBar(
-        title: const Text('Add Menu Item'),
-        backgroundColor: colors.backgroundSurface,
-        elevation: 0,
-      ),
+      appBar: const CustomAppBar(title: 'Add Menu Item', showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -78,25 +76,52 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
               ),
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
-                value: viewModel.selectedStallId,
+                value: viewModel.selectedHawkerCenterId,
+                isExpanded: true,
                 decoration: const InputDecoration(
-                  labelText: 'Select Stall',
+                  labelText: 'Select Hawker Center',
                 ),
-                items: viewModel.stalls.map((stall) {
-                  return DropdownMenuItem(
-                    value: stall.id,
-                    child: Text(stall.name),
-                  );
-                }).toList(),
-                onChanged: viewModel.setSelectedStall,
+                items:
+                    viewModel.hawkerCenters.map((hc) {
+                      return DropdownMenuItem(
+                        value: hc.id,
+                        child: Text(hc.name, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                onChanged: viewModel.setSelectedHawkerCenter,
+                validator: viewModel.validateHawkerCenter,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                key: ValueKey(viewModel.selectedHawkerCenterId),
+                value: viewModel.selectedStallId,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText:
+                      viewModel.isLoadingStalls
+                          ? 'Loading stalls...'
+                          : 'Select Stall',
+                ),
+                items:
+                    viewModel.stalls.map((stall) {
+                      return DropdownMenuItem(
+                        value: stall.id,
+                        child: Text(
+                          stall.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                onChanged:
+                    viewModel.selectedHawkerCenterId == null
+                        ? null
+                        : viewModel.setSelectedStall,
                 validator: viewModel.validateStall,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: viewModel.nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Dish Name',
-                ),
+                decoration: const InputDecoration(labelText: 'Dish Name'),
                 validator: viewModel.validateName,
               ),
               const SizedBox(height: 16),
@@ -108,6 +133,65 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
                 ),
                 keyboardType: TextInputType.number,
                 validator: viewModel.validatePrice,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Tags',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (viewModel.tags.isEmpty)
+                Text(
+                  'No tags available',
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children:
+                      viewModel.tags.map((tag) {
+                        final isSelected = viewModel.selectedTagIds.contains(
+                          tag.id,
+                        );
+                        return GestureDetector(
+                          onTap: () => viewModel.toggleTag(tag.id),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  isSelected
+                                      ? AppColors.brandPrimary
+                                      : colors.backgroundGreyInformation,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              tag.name,
+                              style: TextStyle(
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : colors.textPrimary,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                ),
+              const SizedBox(height: 16),
+              ImagePickerField(
+                imageFile: viewModel.imageFile,
+                onImagePicked: viewModel.setImage,
+                onImageRemoved: viewModel.removeImage,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -122,17 +206,20 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: viewModel.isLoading ? null : _submit,
-                  child: viewModel.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text(
-                          'Submit',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
+                  child:
+                      viewModel.isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                 ),
               ),
             ],
