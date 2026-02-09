@@ -387,7 +387,7 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
           MaterialPageRoute(
             builder: (context) => MenuItemDetailsView(
               item: item,
-              stallId: widget.streetFoodId,
+              stallId: item.stallId,
             ),
           ),
         );
