@@ -96,6 +96,7 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
+                key: ValueKey(viewModel.selectedHawkerCenterId),
                 value: viewModel.selectedStallId,
                 isExpanded: true,
                 decoration: InputDecoration(

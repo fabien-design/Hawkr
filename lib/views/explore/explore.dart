@@ -191,9 +191,9 @@ class _ExploreViewState extends State<ExploreView> {
               initialCenter: initialCenter,
               initialZoom: _currentZoom,
               onPositionChanged: (position, hasGesture) {
-                if (position.zoom != null && position.zoom != _currentZoom) {
+                if (position.zoom != _currentZoom) {
                   setState(() {
-                    _currentZoom = position.zoom!;
+                    _currentZoom = position.zoom;
                   });
                   if (_currentZoom >= _streetFoodZoomThreshold &&
                       _visibleStreetFoods.isEmpty) {
@@ -419,11 +419,11 @@ class _ExploreViewState extends State<ExploreView> {
           ),
           // Bottom Sliding Panel
           DraggableScrollableSheet(
-            initialChildSize: 0.05, // Only show the bar
-            minChildSize: 0.05,
+            initialChildSize: 0.25, // Only show the bar
+            minChildSize: 0.25,
             maxChildSize: 0.8,
             snap: true,
-            snapSizes: const [0.05, 0.4, 0.8],
+            snapSizes: const [0.25, 0.8],
             builder: (context, scrollController) {
               return HawkerCenterPanel(
                 hawkerCenters: _nearbyHawkerCenters,
