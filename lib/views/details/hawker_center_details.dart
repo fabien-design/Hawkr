@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:hawklap/models/hawker_center.dart' as model;
 import 'package:hawklap/services/hawker_center_service.dart';
 import '../../core/services/explore/map_service.dart';
@@ -146,6 +149,11 @@ class _HawkerCenterDetailViewState extends State<HawkerCenterDetailView> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: () => _openInGoogleMaps(hc),
+                    child: _buildMapSection(hc, colors),
+                  ),
                   const SizedBox(height: 32),
                   Row(
                     children: [
@@ -263,6 +271,57 @@ class _HawkerCenterDetailViewState extends State<HawkerCenterDetailView> {
           ],
         ),
         child: Icon(icon, color: iconColor, size: 20),
+      ),
+    );
+  }
+
+  Future<void> _openInGoogleMaps(model.HawkerCenter hc) async {
+    final url = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${hc.latitude},${hc.longitude}',
+    );
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
+  Widget _buildMapSection(model.HawkerCenter hc, AppColorScheme colors) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final point = LatLng(hc.latitude, hc.longitude);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: SizedBox(
+        height: 180,
+        child: AbsorbPointer(
+          child: FlutterMap(
+            options: MapOptions(
+              initialCenter: point,
+              initialZoom: 15,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate:
+                    isDark
+                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.hawkr',
+                retinaMode: isDark ? RetinaMode.isHighDensity(context) : false,
+              ),
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: point,
+                    width: 40,
+                    height: 40,
+                    child: Icon(
+                      Icons.location_on,
+                      color: AppColors.brandPrimary,
+                      size: 36,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
