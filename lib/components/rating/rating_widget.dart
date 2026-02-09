@@ -1,43 +1,31 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
-class CommunityRatingWidget extends StatefulWidget {
-  final String percentage;
-  final bool initialIsLiked;
-  final bool initialIsDisliked;
-  final Function(bool isLiked, bool isDisliked)? onRatingChanged;
+/// The action the user wants to perform.
+enum VoteAction { upvote, downvote, removeVote }
+
+/// A fully parent-controlled rating widget.
+/// The parent owns `isLiked` / `isDisliked` and handles the callback.
+class CommunityRatingWidget extends StatelessWidget {
+  final bool isLiked;
+  final bool isDisliked;
+  final int upvoteCount;
+  final int downvoteCount;
+  final ValueChanged<VoteAction>? onVote;
 
   const CommunityRatingWidget({
     super.key,
-    required this.percentage,
-    this.initialIsLiked = false,
-    this.initialIsDisliked = false,
-    this.onRatingChanged,
+    this.isLiked = false,
+    this.isDisliked = false,
+    this.upvoteCount = 0,
+    this.downvoteCount = 0,
+    this.onVote,
   });
 
-  @override
-  State<CommunityRatingWidget> createState() => _CommunityRatingWidgetState();
-}
-
-class _CommunityRatingWidgetState extends State<CommunityRatingWidget> {
-  late bool _isLiked;
-  late bool _isDisliked;
-
-  @override
-  void initState() {
-    super.initState();
-    _isLiked = widget.initialIsLiked;
-    _isDisliked = widget.initialIsDisliked;
-  }
-
-  void _updateRating(bool isLiked, bool isDisliked) {
-    setState(() {
-      _isLiked = isLiked;
-      _isDisliked = isDisliked;
-    });
-    if (widget.onRatingChanged != null) {
-      widget.onRatingChanged!(_isLiked, _isDisliked);
-    }
+  String get _percentage {
+    final total = upvoteCount + downvoteCount;
+    if (total == 0) return '0%';
+    return '${(upvoteCount / total * 100).toStringAsFixed(0)}%';
   }
 
   @override
@@ -61,64 +49,94 @@ class _CommunityRatingWidgetState extends State<CommunityRatingWidget> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Thumbs up button
+          // ── Upvote button + count ──
           GestureDetector(
             onTap: () {
-              bool newLiked = !_isLiked;
-              bool newDisliked = _isDisliked;
-              if (newLiked) newDisliked = false;
-              _updateRating(newLiked, newDisliked);
+              // If already liked → remove vote, else → upvote
+              onVote?.call(isLiked ? VoteAction.removeVote : VoteAction.upvote);
             },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.brandSuccess.withValues(
-                  alpha: _isLiked ? 0.3 : 0.15,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.brandSuccess.withValues(
+                      alpha: isLiked ? 0.3 : 0.15,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                    size: 20,
+                    color: AppColors.brandSuccess,
+                  ),
                 ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                size: 20,
-                color: AppColors.brandSuccess,
-              ),
+                const SizedBox(width: 6),
+                Text(
+                  '$upvoteCount',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isLiked
+                        ? AppColors.brandSuccess
+                        : colors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 16),
-          // Percentage
+
+          // ── Percentage ──
           Text(
-            widget.percentage,
+            _percentage,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color:
-                  _isDisliked ? AppColors.brandPrimary : AppColors.brandSuccess,
+              color: isDisliked
+                  ? AppColors.brandPrimary
+                  : AppColors.brandSuccess,
             ),
           ),
           const SizedBox(width: 16),
-          // Thumbs down button
+
+          // ── Downvote button + count ──
           GestureDetector(
             onTap: () {
-              bool newDisliked = !_isDisliked;
-              bool newLiked = _isLiked;
-              if (newDisliked) newLiked = false;
-              _updateRating(newLiked, newDisliked);
+              // If already disliked → remove vote, else → downvote
+              onVote?.call(
+                  isDisliked ? VoteAction.removeVote : VoteAction.downvote);
             },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.brandPrimary.withValues(
-                  alpha: _isDisliked ? 0.25 : 0.12,
+            child: Row(
+              children: [
+                Text(
+                  '$downvoteCount',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDisliked
+                        ? AppColors.brandPrimary
+                        : colors.textSecondary,
+                  ),
                 ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _isDisliked ? Icons.thumb_down : Icons.thumb_down_outlined,
-                size: 20,
-                color: AppColors.brandPrimary,
-              ),
+                const SizedBox(width: 6),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.brandPrimary.withValues(
+                      alpha: isDisliked ? 0.25 : 0.12,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isDisliked ? Icons.thumb_down : Icons.thumb_down_outlined,
+                    size: 20,
+                    color: AppColors.brandPrimary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

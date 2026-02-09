@@ -78,18 +78,6 @@ class _ProfileContentState extends State<_ProfileContent> {
                         ),
                       const SizedBox(height: 24),
 
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const MenuItemDetails(),
-                            ),
-                          );
-                        },
-                        child: Text('Go to Second Screen'),
-                      ),
-
                       // Edit profile section
                       if (viewModel.isEditing) ...[
                         Form(

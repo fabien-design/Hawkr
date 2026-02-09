@@ -4,6 +4,7 @@ import 'package:hawklap/components/app_bar/custom_app_bar.dart';
 import 'package:hawklap/components/cards/hawker_center_card.dart';
 import 'package:hawklap/components/cards/menu_item_card.dart';
 import 'package:hawklap/components/cards/street_food_card.dart';
+import 'package:hawklap/views/details/menu_item_details.dart';
 import 'package:hawklap/components/search/horizontal_carousel.dart';
 import 'package:hawklap/components/search/search_bar.dart' as custom;
 import 'package:hawklap/components/search/section_header.dart';
@@ -152,6 +153,26 @@ class _SearchViewState extends State<SearchView> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Refresh just the menu item vote counts (called when returning from details).
+  Future<void> _refreshMenuItemVotes() async {
+    try {
+      final itemIds = _menuItems
+          .where((item) => item.id != null)
+          .map((item) => item.id!)
+          .toList();
+      if (itemIds.isEmpty) return;
+
+      final votes = await _voteService.getMenuItemVotesBatch(itemIds);
+      if (mounted) {
+        setState(() {
+          _menuItemVotes = votes;
+        });
+      }
+    } catch (e) {
+      // Silently handle
+    }
   }
 
   @override
@@ -371,6 +392,20 @@ class _SearchViewState extends State<SearchView> {
                 colors: colors,
                 stallName: _stallNames[item.stallId] ?? 'Unknown Stall',
                 voteCount: _menuItemVotes[item.id] ?? VoteCount(upvotes: 0, downvotes: 0),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MenuItemDetails(
+                        item: item,
+                        stallName: _stallNames[item.stallId],
+                        stallId: item.stallId,
+                      ),
+                    ),
+                  );
+                  // Refresh vote counts when returning from details
+                  _refreshMenuItemVotes();
+                },
               ),
             ),
           ],

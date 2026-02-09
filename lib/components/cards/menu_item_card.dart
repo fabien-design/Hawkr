@@ -10,6 +10,7 @@ class MenuItemCard extends StatelessWidget {
   final AppColorScheme colors;
   final String stallName;
   final VoteCount voteCount;
+  final VoidCallback? onTap;
 
   const MenuItemCard({
     super.key,
@@ -17,15 +18,18 @@ class MenuItemCard extends StatelessWidget {
     required this.colors,
     required this.stallName,
     required this.voteCount,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BaseInfoCard(
-      colors: colors,
-      imageChild: _buildImageChild(),
-      title: item.name,
-      subtitle: stallName,
+    return GestureDetector(
+      onTap: onTap,
+      child: BaseInfoCard(
+        colors: colors,
+        imageChild: _buildImageChild(),
+        title: item.name,
+        subtitle: stallName,
       footer: Row(
         children: [
           Text(
@@ -45,6 +49,7 @@ class MenuItemCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
       ),
     );
   }
