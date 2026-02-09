@@ -49,8 +49,10 @@ class UserService {
     };
 
     if (displayName != null) {
-      data['display_name'] = displayName;
+      data['display_name'] = displayName.isEmpty ? null : displayName;
     }
+
+    final authUser = _supabase.auth.currentUser;
 
     final response = await _supabase
         .from(_table)
@@ -58,7 +60,11 @@ class UserService {
         .eq('id', userId)
         .select()
         .single();
-    return AppUser.fromJson(response);
+    return AppUser.fromSupabase(
+      id: userId,
+      email: authUser?.email ?? '',
+      profile: response,
+    );
   }
 
   Future<void> createProfile(String userId, String email) async {

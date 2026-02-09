@@ -19,8 +19,15 @@ class ProfileView extends StatelessWidget {
   }
 }
 
-class _ProfileContent extends StatelessWidget {
+class _ProfileContent extends StatefulWidget {
   const _ProfileContent();
+
+  @override
+  State<_ProfileContent> createState() => _ProfileContentState();
+}
+
+class _ProfileContentState extends State<_ProfileContent> {
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +70,7 @@ class _ProfileContent extends StatelessWidget {
                     ),
                     if (viewModel.user?.displayName != null)
                       Text(
-                        viewModel.user!.displayName!,
+                        viewModel.user!.email,
                         style: TextStyle(
                           fontSize: 14,
                           color: colors.textSecondary,
@@ -72,14 +79,17 @@ class _ProfileContent extends StatelessWidget {
                     const SizedBox(height: 24),
                     // Edit profile section
                     if (viewModel.isEditing) ...[
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextFormField(
-                          controller: viewModel.displayNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Display Name',
+                      Form(
+                        key: _formKey,
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: TextFormField(
+                            controller: viewModel.displayNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Display Name',
+                            ),
+                            validator: viewModel.validateDisplayName,
                           ),
-                          validator: viewModel.validateDisplayName,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -96,7 +106,27 @@ class _ProfileContent extends StatelessWidget {
                             child: ElevatedButton(
                               onPressed: viewModel.isSaving
                                   ? null
-                                  : () => viewModel.saveProfile(),
+                                  : () async {
+                                      if (!_formKey.currentState!.validate()) return;
+                                      try {
+                                        final success = await viewModel.saveProfile();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              success
+                                                  ? 'Profile saved successfully'
+                                                  : 'Failed to save profile',
+                                            ),
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('An error occurred while saving the profile'),
+                                          ),
+                                        );
+                                      }
+                                    },
                               child: viewModel.isSaving
                                   ? const SizedBox(
                                       height: 20,

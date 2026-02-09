@@ -67,6 +67,8 @@ class ProfileViewModel extends ChangeNotifier {
             : displayNameController.text.trim(),
       );
 
+      debugPrint('Updated user: $updatedUser');
+
       _user = updatedUser;
       _isEditing = false;
       _isSaving = false;
@@ -74,6 +76,7 @@ class ProfileViewModel extends ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage = e.toString();
+      debugPrint('Error saving profile: $e');
       _isSaving = false;
       notifyListeners();
       return false;
@@ -96,8 +99,8 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   String? validateDisplayName(String? value) {
-    if (value != null && value.length > 50) {
-      return 'Display name must be less than 50 characters';
+    if (value != null && value.length > 3 && value.length > 50) {
+      return 'Display name must be more than 3 chars and less than 50 chars';
     }
     return null;
   }

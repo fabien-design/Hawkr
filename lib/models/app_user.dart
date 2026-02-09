@@ -29,7 +29,7 @@ class AppUser {
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
       id: json['id'] as String,
-      email: json['email'] as String,
+      email: (json['email'] as String?) ?? '',
       displayName: json['display_name'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
