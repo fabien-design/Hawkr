@@ -9,6 +9,7 @@ class HawkerCenter {
   final double latitude;
   final double longitude;
   final String? description;
+  final String? imageUrl;
   final int streetFoodCount;
 
   HawkerCenter({
@@ -18,11 +19,11 @@ class HawkerCenter {
     required this.latitude,
     required this.longitude,
     this.description,
+    this.imageUrl,
     this.streetFoodCount = 0,
   });
 
   factory HawkerCenter.fromJson(Map<String, dynamic> json) {
-    // Supabase returns count as a list of maps usually when using street_foods(count)
     int count = 0;
     if (json['street_foods'] != null) {
       if (json['street_foods'] is List && json['street_foods'].isNotEmpty) {
@@ -39,7 +40,50 @@ class HawkerCenter {
       latitude: json['latitude'].toDouble(),
       longitude: json['longitude'].toDouble(),
       description: json['description'],
+      imageUrl: json['image_url'],
       streetFoodCount: count,
+    );
+  }
+}
+
+class MenuItem {
+  final String id;
+  final String name;
+  final double price;
+  final String? description;
+  final String? imageUrl;
+  final String stallId;
+  final List<String> tags;
+
+  MenuItem({
+    required this.id,
+    required this.name,
+    required this.price,
+    this.description,
+    this.imageUrl,
+    required this.stallId,
+    this.tags = const [],
+  });
+
+  factory MenuItem.fromJson(Map<String, dynamic> json) {
+    List<String> tags = [];
+    if (json['menu_items_tags'] != null) {
+      final tagsList = json['menu_items_tags'] as List;
+      for (var tagMap in tagsList) {
+        if (tagMap['predefined_tags'] != null) {
+          tags.add(tagMap['predefined_tags']['name']);
+        }
+      }
+    }
+
+    return MenuItem(
+      id: json['id'],
+      name: json['name'],
+      price: (json['price'] as num).toDouble(),
+      description: json['description'],
+      imageUrl: json['image_url'],
+      stallId: json['stall_id'],
+      tags: tags,
     );
   }
 }
@@ -48,19 +92,27 @@ class StreetFood {
   final String id;
   final String name;
   final String? description;
+  final String? imageUrl;
   final String hawkerCenterId;
   final double latitude;
   final double longitude;
-  final int votes;
+  final HawkerCenter? hawkerCenter;
+  final List<MenuItem> menuItems;
+  final int upvotes;
+  final int downvotes;
 
   StreetFood({
     required this.id,
     required this.name,
     this.description,
+    this.imageUrl,
     required this.hawkerCenterId,
     required this.latitude,
     required this.longitude,
-    this.votes = 0,
+    this.hawkerCenter,
+    this.menuItems = const [],
+    this.upvotes = 0,
+    this.downvotes = 0,
   });
 
   factory StreetFood.fromJson(Map<String, dynamic> json) {
@@ -68,10 +120,20 @@ class StreetFood {
       id: json['id'],
       name: json['name'],
       description: json['description'],
+      imageUrl: json['image_url'],
       hawkerCenterId: json['hawker_center_id'],
       latitude: json['latitude'].toDouble(),
       longitude: json['longitude'].toDouble(),
-      votes: 0,
+      hawkerCenter:
+          json['hawker_centers'] != null
+              ? HawkerCenter.fromJson(json['hawker_centers'])
+              : null,
+      menuItems:
+          json['menu_items'] != null
+              ? (json['menu_items'] as List)
+                  .map((i) => MenuItem.fromJson(i))
+                  .toList()
+              : [],
     );
   }
 }
@@ -111,7 +173,6 @@ class MapService {
     Position userPosition,
     double radiusInKm,
   ) async {
-    // We use a join to get the count of street_foods for each hawker_center
     final response = await _supabase
         .from('hawker_centers')
         .select('*, street_foods(count)');
@@ -136,10 +197,25 @@ class MapService {
   ) async {
     final response = await _supabase
         .from('street_foods')
-        .select()
+        .select(
+          '*, hawker_centers(*), menu_items(*, menu_items_tags(predefined_tags(name)))',
+        )
         .eq('hawker_center_id', hawkerCenterId);
 
     return (response as List).map((json) => StreetFood.fromJson(json)).toList();
+  }
+
+  Future<StreetFood> getStreetFoodDetails(String id) async {
+    final response =
+        await _supabase
+            .from('street_foods')
+            .select(
+              '*, hawker_centers(*), menu_items(*, menu_items_tags(predefined_tags(name)))',
+            )
+            .eq('id', id)
+            .single();
+
+    return StreetFood.fromJson(response);
   }
 
   Future<bool> isStreetFoodFavorite(String streetFoodId) async {
