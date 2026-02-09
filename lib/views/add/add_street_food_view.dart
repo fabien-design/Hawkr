@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:hawklap/components/image_picker/image_picker_field.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:hawklap/components/app_bar/custom_app_bar.dart';
@@ -133,6 +134,12 @@ class _AddStreetFoodContentState extends State<_AddStreetFoodContent> {
               const SizedBox(height: 16),
               // Interactive map with Grab-style picker
               _buildInteractiveMap(viewModel, colors),
+              const SizedBox(height: 16),
+              ImagePickerField(
+                imageFile: viewModel.imageFile,
+                onImagePicked: viewModel.setImage,
+                onImageRemoved: viewModel.removeImage,
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: viewModel.descriptionController,

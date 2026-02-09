@@ -1,12 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hawklap/models/menu_item.dart';
 import 'package:hawklap/models/street_food.dart';
 import 'package:hawklap/services/menu_item_service.dart';
+import 'package:hawklap/services/storage_service.dart';
 import 'package:hawklap/services/street_food_service.dart';
 
 class AddMenuItemViewModel extends ChangeNotifier {
   final _streetFoodService = StreetFoodService();
   final _menuItemService = MenuItemService();
+  final _storageService = StorageService();
 
   final nameController = TextEditingController();
   final priceController = TextEditingController();
@@ -16,11 +19,13 @@ class AddMenuItemViewModel extends ChangeNotifier {
   List<StreetFood> _stalls = [];
   bool _isLoading = false;
   String? _errorMessage;
+  File? _imageFile;
 
   String? get selectedStallId => _selectedStallId;
   List<StreetFood> get stalls => _stalls;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  File? get imageFile => _imageFile;
 
   void setSelectedStall(String? id) {
     _selectedStallId = id;
@@ -38,6 +43,16 @@ class AddMenuItemViewModel extends ChangeNotifier {
     }
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  void setImage(File file) {
+    _imageFile = file;
+    notifyListeners();
+  }
+
+  void removeImage() {
+    _imageFile = null;
     notifyListeners();
   }
 
@@ -73,6 +88,17 @@ class AddMenuItemViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      String? imageUrl;
+
+      if (_imageFile != null) {
+        final ext = _imageFile!.path.split('.').last;
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
+        imageUrl = await _storageService.uploadMenuItemImage(
+          fileName,
+          _imageFile!,
+        );
+      }
+
       final menuItem = MenuItem(
         name: nameController.text,
         price: double.parse(priceController.text),
@@ -80,6 +106,7 @@ class AddMenuItemViewModel extends ChangeNotifier {
             ? null
             : descriptionController.text,
         stallId: _selectedStallId!,
+        imageUrl: imageUrl,
       );
 
       await _menuItemService.create(menuItem);

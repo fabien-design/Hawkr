@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hawklap/models/address_suggestion.dart';
 import 'package:hawklap/models/hawker_center.dart';
 import 'package:hawklap/services/address_suggestion_service.dart';
 import 'package:hawklap/services/hawker_center_service.dart';
+import 'package:hawklap/services/storage_service.dart';
 
 class AddHawkerCenterViewModel extends ChangeNotifier {
   final _service = HawkerCenterService();
   final _addressSuggestionService = AddressSuggestionService();
+  final _storageService = StorageService();
 
   final nameController = TextEditingController();
   final addressController = TextEditingController();
@@ -19,6 +22,7 @@ class AddHawkerCenterViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+  File? _imageFile;
 
   // Address suggestions state
   List<AddressSuggestion> _suggestions = [];
@@ -31,11 +35,22 @@ class AddHawkerCenterViewModel extends ChangeNotifier {
   double get longitude => _longitude;
   List<AddressSuggestion> get suggestions => _suggestions;
   bool get isLoadingSuggestions => _isLoadingSuggestions;
+  File? get imageFile => _imageFile;
 
   // TODO: Sera appelé par la map Leaflet
   void setLocation(double lat, double lng) {
     _latitude = lat;
     _longitude = lng;
+    notifyListeners();
+  }
+
+  void setImage(File file) {
+    _imageFile = file;
+    notifyListeners();
+  }
+
+  void removeImage() {
+    _imageFile = null;
     notifyListeners();
   }
 
@@ -100,6 +115,17 @@ class AddHawkerCenterViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      String? imageUrl;
+
+      if (_imageFile != null) {
+        final ext = _imageFile!.path.split('.').last;
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
+        imageUrl = await _storageService.uploadStallImage(
+          fileName,
+          _imageFile!,
+        );
+      }
+
       final hawkerCenter = HawkerCenter(
         name: nameController.text,
         address: addressController.text,
@@ -108,6 +134,7 @@ class AddHawkerCenterViewModel extends ChangeNotifier {
         description: descriptionController.text.isEmpty
             ? null
             : descriptionController.text,
+        imageUrl: imageUrl,
       );
 
       await _service.create(hawkerCenter);
