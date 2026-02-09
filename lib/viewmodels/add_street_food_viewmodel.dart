@@ -1,13 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hawklap/models/hawker_center.dart';
 import 'package:hawklap/models/street_food.dart';
 import 'package:hawklap/services/hawker_center_service.dart';
+import 'package:hawklap/services/storage_service.dart';
 import 'package:hawklap/services/street_food_service.dart';
 
 class AddStreetFoodViewModel extends ChangeNotifier {
   final _hawkerCenterService = HawkerCenterService();
   final _streetFoodService = StreetFoodService();
+  final _storageService = StorageService();
 
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
@@ -27,6 +31,7 @@ class AddStreetFoodViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+  File? _imageFile;
 
   String? get selectedHawkerCenterId => _selectedHawkerCenterId;
   HawkerCenter? get selectedHawkerCenter => _selectedHawkerCenter;
@@ -37,6 +42,7 @@ class AddStreetFoodViewModel extends ChangeNotifier {
   double get longitude => _longitude;
   Position? get userPosition => _userPosition;
   bool get isLoadingUserLocation => _isLoadingUserLocation;
+  File? get imageFile => _imageFile;
 
   /// Update stall location when map is moved
   void setLocation(double lat, double lng) {
@@ -116,6 +122,17 @@ class AddStreetFoodViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setImage(File file) {
+    _imageFile = file;
+    notifyListeners();
+  }
+
+  void removeImage() {
+    _imageFile = null;
+    notifyListeners();
+  }
+
+
   String? validateHawkerCenter(String? value) {
     if (value == null) {
       return 'Please select a hawker center';
@@ -138,6 +155,17 @@ class AddStreetFoodViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      String? imageUrl;
+
+      if (_imageFile != null) {
+        final ext = _imageFile!.path.split('.').last;
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
+        imageUrl = await _storageService.uploadStallImage(
+          fileName,
+          _imageFile!,
+        );
+      }
+
       final streetFood = StreetFood(
         name: nameController.text,
         longitude: _longitude,
@@ -145,6 +173,7 @@ class AddStreetFoodViewModel extends ChangeNotifier {
         description: descriptionController.text.isEmpty
             ? null
             : descriptionController.text,
+        imageUrl: imageUrl,
         hawkerCenterId: _selectedHawkerCenterId!,
       );
 

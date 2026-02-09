@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hawklap/components/app_bar/custom_app_bar.dart';
+import 'package:hawklap/components/image_picker/image_picker_field.dart';
 import 'package:hawklap/core/theme/app_colors.dart';
 import 'package:hawklap/viewmodels/add_menu_item_viewmodel.dart';
 
@@ -79,13 +80,17 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
                 initialValue: viewModel.selectedStallId,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Select Stall',
                 ),
                 items: viewModel.stalls.map((stall) {
                   return DropdownMenuItem(
                     value: stall.id,
-                    child: Text(stall.name),
+                    child: Text(
+                      stall.name,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   );
                 }).toList(),
                 onChanged: viewModel.setSelectedStall,
@@ -108,6 +113,12 @@ class _AddMenuItemContentState extends State<_AddMenuItemContent> {
                 ),
                 keyboardType: TextInputType.number,
                 validator: viewModel.validatePrice,
+              ),
+              const SizedBox(height: 16),
+              ImagePickerField(
+                imageFile: viewModel.imageFile,
+                onImagePicked: viewModel.setImage,
+                onImageRemoved: viewModel.removeImage,
               ),
               const SizedBox(height: 16),
               TextFormField(

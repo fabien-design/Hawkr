@@ -4,6 +4,7 @@ class StreetFood {
   final double longitude;
   final double latitude;
   final String? description;
+  final String? imageUrl;
   final String hawkerCenterId;
   final DateTime? createdAt;
 
@@ -13,6 +14,7 @@ class StreetFood {
     required this.longitude,
     required this.latitude,
     this.description,
+    this.imageUrl,
     required this.hawkerCenterId,
     this.createdAt,
   });
@@ -24,6 +26,7 @@ class StreetFood {
       longitude: (json['longitude'] as num).toDouble(),
       latitude: (json['latitude'] as num).toDouble(),
       description: json['description'] as String?,
+      imageUrl: json['image_url'] as String?,
       hawkerCenterId: json['hawker_center_id'] as String,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -38,6 +41,7 @@ class StreetFood {
       'longitude': longitude,
       'latitude': latitude,
       if (description != null) 'description': description,
+      if (imageUrl != null) 'image_url': imageUrl,
       'hawker_center_id': hawkerCenterId,
     };
   }

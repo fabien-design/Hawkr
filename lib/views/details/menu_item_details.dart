@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 class MenuItemDetails extends StatefulWidget {
-  const MenuItemDetails({super.key});
+  final String? imageUrl;
+
+  const MenuItemDetails({super.key, this.imageUrl});
 
   @override
   State<MenuItemDetails> createState() => _MenuItemDetailsState();
@@ -112,6 +114,7 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
 
                   // Allergen section
                   _buildAllergenSection(colors),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -129,17 +132,31 @@ class _MenuItemDetailsState extends State<MenuItemDetails> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // fake image
-          Container(
-            decoration: BoxDecoration(
-              color: colors.borderDefault,
+          // Image or placeholder
+          if (widget.imageUrl != null)
+            Image.network(
+              widget.imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: colors.borderDefault,
+                child: Icon(
+                  Icons.restaurant,
+                  size: 80,
+                  color: colors.textDisabled,
+                ),
+              ),
+            )
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: colors.borderDefault,
+              ),
+              child: Icon(
+                Icons.restaurant,
+                size: 80,
+                color: colors.textDisabled,
+              ),
             ),
-            child: Icon(
-              Icons.restaurant,
-              size: 80,
-              color: colors.textDisabled,
-            ),
-          ),
 
           // Gradient overlay at top for status bar readability
           Positioned(

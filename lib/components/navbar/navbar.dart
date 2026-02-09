@@ -19,6 +19,11 @@ class _MainNavbarState extends State<MainNavbar> {
   int _currentIndex = 0;
   final authService = AuthService();
 
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
+    5,
+    (_) => GlobalKey<NavigatorState>(),
+  );
+
   final List<Widget> _views = const [
     ExploreView(),
     SearchView(),
@@ -31,6 +36,12 @@ class _MainNavbarState extends State<MainNavbar> {
   final Set<int> _protectedIndices = const {2, 3, 4};
 
   void _onTabTapped(int index) async {
+    if (index == _currentIndex) {
+      // Pop to root of current tab
+      _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+      return;
+    }
+
     if (_protectedIndices.contains(index) && !authService.isLoggedIn()) {
       final result = await Navigator.push<bool>(
         context,
@@ -56,49 +67,71 @@ class _MainNavbarState extends State<MainNavbar> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = isDark ? AppColors.dark : AppColors.light;
 
-    return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _views),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: colors.backgroundCard,
-          boxShadow: [
-            BoxShadow(
-              color: colors.textPrimary.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        final navigatorState = _navigatorKeys[_currentIndex].currentState;
+        if (navigatorState != null && navigatorState.canPop()) {
+          navigatorState.pop();
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: List.generate(_views.length, (index) {
+            return Navigator(
+              key: _navigatorKeys[index],
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => _views[index],
+                );
+              },
+            );
+          }),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: colors.backgroundCard,
-          selectedItemColor: AppColors.brandPrimary,
-          unselectedItemColor: colors.textSecondary,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore_outlined),
-              label: 'Explore',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.search_outlined),
-              label: 'Search',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border),
-              label: 'Favourites',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline),
-              label: 'Add',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              label: 'Profile',
-            ),
-          ],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: colors.backgroundCard,
+            boxShadow: [
+              BoxShadow(
+                color: colors.textPrimary.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: _onTabTapped,
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: colors.backgroundCard,
+            selectedItemColor: AppColors.brandPrimary,
+            unselectedItemColor: colors.textSecondary,
+            elevation: 0,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.explore_outlined),
+                label: 'Explore',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search_outlined),
+                label: 'Search',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.favorite_border),
+                label: 'Favourites',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.add_circle_outline),
+                label: 'Add',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
     );
