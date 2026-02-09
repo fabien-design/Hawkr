@@ -4,6 +4,8 @@ import 'package:hawklap/views/details/menu_item_details.dart';
 import '../../core/services/explore/map_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../components/rating/rating_widget.dart';
+import '../../models/vote_count.dart';
+import '../../services/vote_service.dart';
 
 class StreetFoodDetailView extends StatefulWidget {
   final String streetFoodId;
@@ -16,11 +18,16 @@ class StreetFoodDetailView extends StatefulWidget {
 
 class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
   final MapService _mapService = MapService();
+  final VoteService _voteService = VoteService();
   bool _isLoading = true;
   StreetFood? _streetFood;
   bool _isFavorite = false;
+
+  // Single source of truth for vote state
   bool _isLiked = false;
   bool _isDisliked = false;
+  int _upvotes = 0;
+  int _downvotes = 0;
 
   @override
   void initState() {
@@ -30,12 +37,26 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
 
   Future<void> _loadData() async {
     try {
-      final food = await _mapService.getStreetFoodDetails(widget.streetFoodId);
-      final isFav = await _mapService.isStreetFoodFavorite(widget.streetFoodId);
+      final results = await Future.wait([
+        _mapService.getStreetFoodDetails(widget.streetFoodId),
+        _mapService.isStreetFoodFavorite(widget.streetFoodId),
+        _voteService.getUserStreetFoodVote(widget.streetFoodId),
+        _voteService.getStreetFoodVotes(widget.streetFoodId),
+      ]);
+
       if (mounted) {
+        final food = results[0] as StreetFood?;
+        final isFav = results[1] as bool;
+        final userVote = results[2] as int?;
+        final counts = results[3] as VoteCount;
+
         setState(() {
           _streetFood = food;
           _isFavorite = isFav;
+          _isLiked = userVote == 1;
+          _isDisliked = userVote == -1;
+          _upvotes = counts.upvotes;
+          _downvotes = counts.downvotes;
           _isLoading = false;
         });
       }
@@ -47,6 +68,69 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error loading details: $e')));
+      }
+    }
+  }
+
+  Future<void> _handleVote(VoteAction action) async {
+    // Save previous state for rollback
+    final prevLiked = _isLiked;
+    final prevDisliked = _isDisliked;
+    final prevUpvotes = _upvotes;
+    final prevDownvotes = _downvotes;
+
+    // Apply optimistic update immediately
+    setState(() {
+      switch (action) {
+        case VoteAction.upvote:
+          _upvotes += 1;
+          if (_isDisliked) _downvotes -= 1;
+          _isLiked = true;
+          _isDisliked = false;
+          break;
+        case VoteAction.downvote:
+          _downvotes += 1;
+          if (_isLiked) _upvotes -= 1;
+          _isDisliked = true;
+          _isLiked = false;
+          break;
+        case VoteAction.removeVote:
+          if (_isLiked) _upvotes -= 1;
+          if (_isDisliked) _downvotes -= 1;
+          _isLiked = false;
+          _isDisliked = false;
+          break;
+      }
+    });
+
+    // Fire DB call in background — revert on failure
+    try {
+      switch (action) {
+        case VoteAction.upvote:
+          await _voteService.voteStreetFood(widget.streetFoodId, 1);
+          break;
+        case VoteAction.downvote:
+          await _voteService.voteStreetFood(widget.streetFoodId, -1);
+          break;
+        case VoteAction.removeVote:
+          await _voteService.removeStreetFoodVote(widget.streetFoodId);
+          break;
+      }
+    } catch (e) {
+      // Rollback to previous state
+      if (mounted) {
+        setState(() {
+          _isLiked = prevLiked;
+          _isDisliked = prevDisliked;
+          _upvotes = prevUpvotes;
+          _downvotes = prevDownvotes;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not update vote: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -280,24 +364,9 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
         CommunityRatingWidget(
           isLiked: _isLiked,
           isDisliked: _isDisliked,
-          onVote: (action) {
-            setState(() {
-              switch (action) {
-                case VoteAction.upvote:
-                  _isLiked = true;
-                  _isDisliked = false;
-                  break;
-                case VoteAction.downvote:
-                  _isDisliked = true;
-                  _isLiked = false;
-                  break;
-                case VoteAction.removeVote:
-                  _isLiked = false;
-                  _isDisliked = false;
-                  break;
-              }
-            });
-          },
+          upvoteCount: _upvotes,
+          downvoteCount: _downvotes,
+          onVote: _handleVote,
         ),
         _buildCircularIconButton(
           icon: _isFavorite ? Icons.favorite : Icons.favorite_border,

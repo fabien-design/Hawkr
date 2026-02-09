@@ -121,16 +121,94 @@ class VoteService {
     }
   }
 
-  /// Placeholder for street food votes (to be implemented when backend is ready)
-  /// For now returns dummy data
+  /// Get the current user's vote for a street food stall (returns 1 for upvote, -1 for downvote, null for no vote)
+  Future<int?> getUserStreetFoodVote(String streetFoodId) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return null;
+
+      final response = await _supabase
+          .from('street_food_votes')
+          .select('vote')
+          .eq('user_id', userId)
+          .eq('street_food_id', streetFoodId)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return response['vote'] as int?;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Submit or update a vote for a street food stall (1 for upvote, -1 for downvote)
+  Future<void> voteStreetFood(String streetFoodId, int vote) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User must be logged in to vote');
+    }
+
+    if (vote != 1 && vote != -1) {
+      throw Exception('Vote must be 1 (upvote) or -1 (downvote)');
+    }
+
+    try {
+      await _supabase.from('street_food_votes').upsert(
+        {
+          'user_id': userId,
+          'street_food_id': streetFoodId,
+          'vote': vote,
+        },
+        onConflict: 'user_id,street_food_id',
+      );
+    } catch (e) {
+      print('Error submitting street food vote: $e');
+      rethrow;
+    }
+  }
+
+  /// Remove a vote for a street food stall
+  Future<void> removeStreetFoodVote(String streetFoodId) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User must be logged in to remove vote');
+    }
+
+    try {
+      await _supabase
+          .from('street_food_votes')
+          .delete()
+          .eq('user_id', userId)
+          .eq('street_food_id', streetFoodId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Get aggregated vote counts for a street food stall from the view
   Future<VoteCount> getStreetFoodVotes(String streetFoodId) async {
-    // TODO: Implement when street_food_votes table is created
-    // For now, return dummy data
-    return VoteCount(upvotes: 0, downvotes: 0);
+    try {
+      final response = await _supabase
+          .from('street_food_votes_stats')
+          .select('upvotes, downvotes')
+          .eq('street_food_id', streetFoodId)
+          .maybeSingle();
+
+      if (response == null) {
+        return VoteCount(upvotes: 0, downvotes: 0);
+      }
+
+      return VoteCount(
+        upvotes: response['upvotes'] as int? ?? 0,
+        downvotes: response['downvotes'] as int? ?? 0,
+      );
+    } catch (e) {
+      return VoteCount(upvotes: 0, downvotes: 0);
+    }
   }
 
   /// Get vote counts for multiple street foods at once
-  /// Returns empty VoteCount objects until street_food_vote_stats view is available
+  /// Returns empty VoteCount objects until street_food_votes_stats view is available
   Future<Map<String, VoteCount>> getStreetFoodVotesBatch(
     List<String> streetFoodIds,
   ) async {
@@ -139,9 +217,9 @@ class VoteService {
     }
 
     try {
-      // Try to query street_food_vote_stats view
+      // Try to query street_food_votes_stats view
       final response = await _supabase
-          .from('street_food_vote_stats')
+          .from('street_food_votes_stats')
           .select('street_food_id, upvotes, downvotes')
           .inFilter('street_food_id', streetFoodIds);
 
