@@ -331,13 +331,26 @@ class _HawkerCenterDetailViewState extends State<HawkerCenterDetailView> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         CommunityRatingWidget(
-          percentage: '96%',
-          initialIsLiked: _isLiked,
-          initialIsDisliked: _isDisliked,
-          onRatingChanged: (liked, disliked) {
+          isLiked: _isLiked,
+          isDisliked: _isDisliked,
+          upvoteCount: 96,
+          downvoteCount: 4,
+          onVote: (action) {
             setState(() {
-              _isLiked = liked;
-              _isDisliked = disliked;
+              switch (action) {
+                case VoteAction.upvote:
+                  _isLiked = true;
+                  _isDisliked = false;
+                  break;
+                case VoteAction.downvote:
+                  _isLiked = false;
+                  _isDisliked = true;
+                  break;
+                case VoteAction.removeVote:
+                  _isLiked = false;
+                  _isDisliked = false;
+                  break;
+              }
             });
           },
         ),
