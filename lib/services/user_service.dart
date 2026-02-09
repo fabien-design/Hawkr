@@ -55,6 +55,7 @@ class UserService {
     final response = await _supabase
         .from(_table)
         .update(data)
+        .eq('id', userId)
         .select()
         .single();
     return AppUser.fromJson(response);
