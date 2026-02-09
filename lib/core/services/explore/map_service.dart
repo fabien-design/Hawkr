@@ -266,4 +266,39 @@ class MapService {
         .map((item) => item['street_food_id'] as String)
         .toList();
   }
+
+  Future<bool> isHawkerCenterFavorite(String hawkerCenterId) async {
+    final user = currentUser;
+    if (user == null) return false;
+
+    final response =
+        await _supabase
+            .from('user_favorite_hawker_centers')
+            .select()
+            .eq('user_id', user.id)
+            .eq('hawker_center_id', hawkerCenterId)
+            .maybeSingle();
+
+    return response != null;
+  }
+
+  Future<void> toggleHawkerCenterFavorite(String hawkerCenterId) async {
+    final user = currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final isFavorite = await isHawkerCenterFavorite(hawkerCenterId);
+
+    if (isFavorite) {
+      await _supabase
+          .from('user_favorite_hawker_centers')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('hawker_center_id', hawkerCenterId);
+    } else {
+      await _supabase.from('user_favorite_hawker_centers').insert({
+        'user_id': user.id,
+        'hawker_center_id': hawkerCenterId,
+      });
+    }
+  }
 }
