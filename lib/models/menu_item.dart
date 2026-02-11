@@ -6,7 +6,6 @@ class MenuItem {
   final String stallId;
   final String? imageUrl;
   final DateTime? createdAt;
-  final List<String> tags;
 
   MenuItem({
     this.id,
@@ -16,20 +15,9 @@ class MenuItem {
     required this.stallId,
     this.imageUrl,
     this.createdAt,
-    this.tags = const [],
   });
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
-    List<String> tags = [];
-    if (json['menu_items_tags'] != null) {
-      final tagsList = json['menu_items_tags'] as List;
-      for (var tagMap in tagsList) {
-        if (tagMap['predefined_tags'] != null) {
-          tags.add(tagMap['predefined_tags']['name']);
-        }
-      }
-    }
-
     return MenuItem(
       id: json['id'] as String?,
       name: json['name'] as String,
@@ -41,7 +29,6 @@ class MenuItem {
           json['created_at'] != null
               ? DateTime.parse(json['created_at'] as String)
               : null,
-      tags: tags,
     );
   }
 
@@ -53,7 +40,6 @@ class MenuItem {
       if (description != null) 'description': description,
       'stall_id': stallId,
       if (imageUrl != null) 'image_url': imageUrl,
-      'tags': tags,
     };
   }
 }

@@ -157,7 +157,7 @@ class MapService {
     final response = await _supabase
         .from('street_foods')
         .select(
-          '*, hawker_centers(*), menu_items(*, menu_items_tags(predefined_tags(name)))',
+          '*, hawker_centers(*), menu_items(*)',
         )
         .eq('hawker_center_id', hawkerCenterId);
 
@@ -169,7 +169,7 @@ class MapService {
         await _supabase
             .from('street_foods')
             .select(
-              '*, hawker_centers(*), menu_items(*, menu_items_tags(predefined_tags(name)))',
+              '*, hawker_centers(*), menu_items(*)',
             )
             .eq('id', id)
             .single();

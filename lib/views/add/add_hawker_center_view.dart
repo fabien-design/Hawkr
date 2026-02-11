@@ -89,7 +89,7 @@ class _AddHawkerCenterContentState extends State<_AddHawkerCenterContent> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _mapController.move(
             LatLng(viewModel.latitude, viewModel.longitude),
-            19.0,
+            17.0,
           );
         });
       }

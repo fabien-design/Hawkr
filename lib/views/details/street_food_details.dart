@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../components/rating/rating_widget.dart';
 import '../../models/vote_count.dart';
 import '../../services/vote_service.dart';
+import '../../services/tag_service.dart';
 
 class StreetFoodDetailView extends StatefulWidget {
   final String streetFoodId;
@@ -19,6 +20,7 @@ class StreetFoodDetailView extends StatefulWidget {
 class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
   final MapService _mapService = MapService();
   final VoteService _voteService = VoteService();
+  final TagService _tagService = TagService();
   bool _isLoading = true;
   StreetFood? _streetFood;
   bool _isFavorite = false;
@@ -28,6 +30,7 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
   bool _isDisliked = false;
   int _upvotes = 0;
   int _downvotes = 0;
+  Map<String, List<String>> _menuItemTags = {};
 
   @override
   void initState() {
@@ -50,6 +53,15 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
         final userVote = results[2] as int?;
         final counts = results[3] as VoteCount;
 
+        Map<String, List<String>> tagsMap = {};
+        if (food != null) {
+          final itemIds = food.menuItems
+              .where((i) => i.id != null)
+              .map((i) => i.id!)
+              .toList();
+          tagsMap = await _tagService.getTagsForMenuItemsBatch(itemIds);
+        }
+
         setState(() {
           _streetFood = food;
           _isFavorite = isFav;
@@ -57,6 +69,7 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
           _isDisliked = userVote == -1;
           _upvotes = counts.upvotes;
           _downvotes = counts.downvotes;
+          _menuItemTags = tagsMap;
           _isLoading = false;
         });
       }
@@ -322,7 +335,8 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
   Widget _buildTags(StreetFood food, AppColorScheme colors) {
     final Set<String> allTags = {};
     for (var item in food.menuItems) {
-      allTags.addAll(item.tags);
+      final itemTags = _menuItemTags[item.id] ?? [];
+      allTags.addAll(itemTags);
     }
 
     final List<String> tags = allTags.toList();
@@ -459,13 +473,13 @@ class _StreetFoodDetailViewState extends State<StreetFoodDetailView> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: colors.textSecondary, fontSize: 14),
                   ),
-                  if (item.tags.isNotEmpty) ...[
+                  if ((_menuItemTags[item.id] ?? []).isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 4,
                       runSpacing: 4,
                       children:
-                          item.tags
+                          (_menuItemTags[item.id] ?? [])
                               .map(
                                 (tag) => Text(
                                   '#$tag',
