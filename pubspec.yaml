@@ -1,5 +1,5 @@
 name: hawklap
-description: "Hawklap"
+description: "Hawkr"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -56,6 +56,22 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   mocktail: ^1.0.4
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/images/logo_icon.png"
+  web:
+    generate: true
+    image_path: "assets/images/logo_icon.png"
+  windows:
+    generate: true
+    image_path: "assets/images/logo_icon.png"
+  macos:
+    generate: true
+    image_path: "assets/images/logo_icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -70,6 +86,7 @@ flutter:
 
   assets:
     - .env
+    - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

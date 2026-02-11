@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:hawklap/models/menu_item.dart';
+import 'package:hawklap/models/vote_count.dart';
+import 'package:hawklap/services/vote_service.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../core/services/explore/map_service.dart';
@@ -20,6 +22,7 @@ class ExploreView extends StatefulWidget {
 
 class _ExploreViewState extends State<ExploreView> {
   final MapService _mapService = MapService();
+  final VoteService _voteService = VoteService();
   final MapController _mapController = MapController();
   Position? _currentPosition;
   List<HawkerCenter> _nearbyHawkerCenters = [];
@@ -187,8 +190,8 @@ class _ExploreViewState extends State<ExploreView> {
     ScrollController controller,
     AppColorScheme colors,
   ) {
-    return FutureBuilder<List<MenuItem>>(
-      future: _fetchAllMenuItemsInArea(),
+    return FutureBuilder<(List<MenuItem>, Map<String, VoteCount>)>(
+      future: _fetchMenuItemsWithVotes(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -197,14 +200,20 @@ class _ExploreViewState extends State<ExploreView> {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
 
+        final (allItems, votesMap) = snapshot.data!;
+
         final items =
-            snapshot.data!.where((item) {
+            allItems.where((item) {
               final priceOk =
                   item.price >= _priceRange.start &&
                   item.price <= _priceRange.end;
-              final ratingOk =
-                  _minRating == null || item.positivePercentage >= _minRating!;
-              return priceOk && ratingOk;
+              if (!priceOk) return false;
+              if (_minRating != null) {
+                final votes = votesMap[item.id] ?? VoteCount(upvotes: 0, downvotes: 0);
+                final percentage = votes.total == 0 ? 0.0 : votes.ratio * 100;
+                return percentage >= _minRating!;
+              }
+              return true;
             }).toList();
 
         if (items.isEmpty) {
@@ -222,14 +231,15 @@ class _ExploreViewState extends State<ExploreView> {
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
-            return _buildMenuItemCard(item, colors);
+            final votes = votesMap[item.id] ?? VoteCount(upvotes: 0, downvotes: 0);
+            return _buildMenuItemCard(item, colors, votes);
           },
         );
       },
     );
   }
 
-  Future<List<MenuItem>> _fetchAllMenuItemsInArea() async {
+  Future<(List<MenuItem>, Map<String, VoteCount>)> _fetchMenuItemsWithVotes() async {
     List<MenuItem> allItems = [];
     for (var center in _nearbyHawkerCenters) {
       final stalls = await _mapService.getStreetFoodsByHawkerCenter(center.id);
@@ -237,10 +247,12 @@ class _ExploreViewState extends State<ExploreView> {
         allItems.addAll(stall.menuItems);
       }
     }
-    return allItems;
+    final itemIds = allItems.where((i) => i.id != null).map((i) => i.id!).toList();
+    final votesMap = await _voteService.getMenuItemVotesBatch(itemIds);
+    return (allItems, votesMap);
   }
 
-  Widget _buildMenuItemCard(MenuItem item, AppColorScheme colors) {
+  Widget _buildMenuItemCard(MenuItem item, AppColorScheme colors, VoteCount votes) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -291,7 +303,7 @@ class _ExploreViewState extends State<ExploreView> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (item.upvotes + item.downvotes > 0)
+                if (votes.total > 0)
                   Row(
                     children: [
                       Icon(
@@ -301,7 +313,7 @@ class _ExploreViewState extends State<ExploreView> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${item.positivePercentage.toInt()}%',
+                        '${(votes.ratio * 100).toInt()}%',
                         style: TextStyle(
                           fontSize: 12,
                           color: colors.textSecondary,

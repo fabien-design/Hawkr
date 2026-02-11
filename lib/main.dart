@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'components/navbar/navbar.dart';
 import 'package:hawklap/core/theme/app_theme.dart';
 import 'package:hawklap/core/theme/theme_provider.dart';
+import 'package:hawklap/views/splash/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeProvider.themeMode,
-      home: const MainNavbar(),
+      home: const SplashScreen(),
     );
   }
 }

@@ -7,8 +7,6 @@ class MenuItem {
   final String? imageUrl;
   final DateTime? createdAt;
   final List<String> tags;
-  final int upvotes;
-  final int downvotes;
 
   MenuItem({
     this.id,
@@ -19,14 +17,7 @@ class MenuItem {
     this.imageUrl,
     this.createdAt,
     this.tags = const [],
-    this.upvotes = 0,
-    this.downvotes = 0,
   });
-
-  double get positivePercentage {
-    if (upvotes + downvotes == 0) return 0;
-    return (upvotes / (upvotes + downvotes)) * 100;
-  }
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
     List<String> tags = [];
@@ -35,19 +26,6 @@ class MenuItem {
       for (var tagMap in tagsList) {
         if (tagMap['predefined_tags'] != null) {
           tags.add(tagMap['predefined_tags']['name']);
-        }
-      }
-    }
-
-    int ups = 0;
-    int downs = 0;
-    if (json['menu_item_votes'] != null) {
-      final votes = json['menu_item_votes'] as List;
-      for (var v in votes) {
-        if (v['vote'] == 1) {
-          ups++;
-        } else if (v['vote'] == -1) {
-          downs++;
         }
       }
     }
@@ -64,8 +42,6 @@ class MenuItem {
               ? DateTime.parse(json['created_at'] as String)
               : null,
       tags: tags,
-      upvotes: ups,
-      downvotes: downs,
     );
   }
 
@@ -78,8 +54,6 @@ class MenuItem {
       'stall_id': stallId,
       if (imageUrl != null) 'image_url': imageUrl,
       'tags': tags,
-      'upvotes': upvotes,
-      'downvotes': downvotes,
     };
   }
 }
